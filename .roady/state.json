@@ -1,0 +1,205 @@
+{
+  "project_id": "olymp",
+  "version": 38,
+  "task_states": {
+    "task-approval-gates-\u0026-steering-hardening": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Approval gate: Run.PendingDecision persisted across awaiting_approval suspension; Engine.Resume picks up after Steer(approve); requiresApproval honors decision || policy. Engine.Halt + POST /v1/halt + olymp halt CLI + client.Halt: pauses in-flight runs and denies pending approvals. PendingDecision column in sqlite + postgres schemas. 84.2% coverage in engine."
+      ],
+      "started_at": "2026-05-01T11:58:52.305245+02:00",
+      "completed_at": "2026-05-01T12:04:23.317626+02:00",
+      "elapsed_minutes": 5
+    },
+    "task-cli-\u0026-plugin-wrappers": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "cmd/olymp + client/: hand-rolled CLI (no Cobra) — serve/submit/inspect/steer/stream + explain/fix wrappers. OlympError{Code,Message,Cause,Hint} with stable exit codes; OLYMP_VERBOSE=1 dumps cause chain. Smoke-tested end-to-end with --demo: full loop completes, bolt logs emit canonical fields, /healthz exposes per-layer registry."
+      ],
+      "started_at": "2026-05-01T11:51:07.791529+02:00",
+      "completed_at": "2026-05-01T11:56:48.089152+02:00",
+      "elapsed_minutes": 5
+    },
+    "task-cognitive-layer-adapters": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "layers ports + httpx (fortify/retry: 5xx+429 retry, 4xx fail-fast, expo+jitter) + 4 HTTP adapters (mnemos/chronos/nous/praxis) + in-memory fakes. Tests: httpx (75%), fake + cross-package adapters via httptest.Server."
+      ],
+      "started_at": "2026-05-01T11:35:39.078613+02:00",
+      "completed_at": "2026-05-01T11:39:35.746015+02:00",
+      "elapsed_minutes": 3
+    },
+    "task-compliance-audit-export-\u0026-dashboards": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/compliance: NDJSON Export emits run + provenance_step + audit_event records ordered by occurred_at; tenant + time-window scoping; pluggable Redactor (NoOp + PIIRedactor for email/ip/phone/ssn). BuildDashboard rolls runs into total/completed/failed/cancelled/in_flight + approval + outcome counters per tenant. 81.2% coverage."
+      ],
+      "started_at": "2026-05-01T12:48:41.509182+02:00",
+      "completed_at": "2026-05-01T12:49:52.482017+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-distributed-loop-runner": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/scheduler: Queue port (Enqueue/Lease/Renew/Release/Stats) + MemoryQueue reference impl with priority FIFO, idempotent enqueue, lease TTL with auto-recovery on expiry, attempt counters. Worker drains the queue: lease → load → engine.Run → release with heartbeat goroutine that renews the lease while the loop runs. SQL-backed queue is a future story; the port lets a host swap implementations without changing workers."
+      ],
+      "started_at": "2026-05-01T12:47:19.696972+02:00",
+      "completed_at": "2026-05-01T12:48:27.325838+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-domain-model-\u0026-run-fsm": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/domain: types.go, run.go, run_fsm.go + 11 tests passing (100% in domain pkg)"
+      ],
+      "started_at": "2026-05-01T10:43:32.709772+02:00",
+      "completed_at": "2026-05-01T11:26:22.251427+02:00",
+      "elapsed_minutes": 42
+    },
+    "task-event-bus-\u0026-streaming": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/eventbus.Bus: fan-out, RunFilter (run_id), bounded buffer + drop-on-overflow with Dropped() counter, auto-unsub on ctx cancel. 94.6% coverage. Engine emits transitioned + layer_called events on every step."
+      ],
+      "started_at": "2026-05-01T11:45:56.229464+02:00",
+      "completed_at": "2026-05-01T11:47:14.259876+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-intent-registry": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/intent: Registry + JSON-Schema-subset Validator + PreparePolicy + Builtins (`explain` read-only, `remediate` approval-gated) + RegisterBuiltins. 69% coverage."
+      ],
+      "started_at": "2026-05-01T11:40:52.081415+02:00",
+      "completed_at": "2026-05-01T11:41:53.040589+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-loop-engine": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/engine: full observe→understand→decide→[gate]→act→learn loop. Five stages always recorded (skipped acting still emits provenance). Goal eval, MaxIterations bound, Deadline enforcement, layer-failure handling, approval-gate (Phase-1 audits, Phase-2-ready EnableApprovalGate flag). 87.6% coverage. 8 tests covering happy paths + failure modes."
+      ],
+      "started_at": "2026-05-01T11:42:17.591612+02:00",
+      "completed_at": "2026-05-01T11:44:41.139111+02:00",
+      "elapsed_minutes": 2
+    },
+    "task-mcp-runtime-surface": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "cmd/olymp/mcp.go: 6 MCP tools (submit_intent, inspect_run, steer_run, halt, list_intents, explain_run) over stdio via mcp-go. Bolt logging adapter for MCP middleware. `olymp mcp --demo` boots in-process fakes for testing."
+      ],
+      "started_at": "2026-05-01T12:40:44.988399+02:00",
+      "completed_at": "2026-05-01T12:42:16.769211+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-multi-tenancy-\u0026-plugin-architecture": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Multi-tenancy: domain.Tenant + propagation through Run, Session, RunFilter, SessionFilter; tenant_org/team/user columns on runs + sessions (sqlite + postgres); X-Olymp-Tenant-{Org,Team,User} headers → ctx; Inspect rejects cross-tenant access. Plugin: registry pattern in /plugin with Init lifecycle, IntentType registration, LayerOverride for cognitive-layer adapters, Peer wrapper for federation across runtimes."
+      ],
+      "started_at": "2026-05-01T12:42:28.424485+02:00",
+      "completed_at": "2026-05-01T12:47:05.484719+02:00",
+      "elapsed_minutes": 4
+    },
+    "task-observability-(bolt-logging)": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/observability: bolt-backed structured logging facade (LogStep with canonical loop fields run_id/iteration/stage/layer/intent_type/caller_type/caller_id/duration_ms + LogError) + HealthRegistry tracking per-layer success/failure with degraded snapshot. Wired into engine via Config.Logger + Config.Health. 82.2% coverage."
+      ],
+      "started_at": "2026-05-01T11:47:18.643923+02:00",
+      "completed_at": "2026-05-01T11:48:48.182407+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-outcome-writeback-to-mnemos": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/outcome.Writer with idempotency by (run_id, action_id) + fortify/retry on transient failures + audit emit. Wired into engine learning stage. 94.4% coverage; engine integration green."
+      ],
+      "started_at": "2026-05-01T11:44:52.0577+02:00",
+      "completed_at": "2026-05-01T11:45:50.365544+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-provenance-\u0026-audit-trail": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/audit: Logger with 8 canonical kinds + Reconstruct(Memory→Signal→Decision→Action→Outcome chain). 86.1% coverage. Storage tables already shipped in repo-storage task."
+      ],
+      "started_at": "2026-05-01T11:39:43.8191+02:00",
+      "completed_at": "2026-05-01T11:40:48.431497+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-public-api-(http)": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/api: OlympAPI interface + Service (Submit/Inspect/Steer/Stream) + HTTP transport (POST /v1/runs, GET /v1/runs/{id}, POST /v1/runs/{id}/steer, GET /v1/runs/stream SSE, GET /healthz). 65.9% coverage. Stream wires into eventbus; Inspect resolves cross-layer refs from provenance."
+      ],
+      "started_at": "2026-05-01T11:48:55.454592+02:00",
+      "completed_at": "2026-05-01T11:50:54.096381+02:00",
+      "elapsed_minutes": 1
+    },
+    "task-repository-ports-\u0026-multi-backend-storage": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "ports + memory + sqlite + postgres backends + store.Open switch + shared suite. Tests passing on memory \u0026 sqlite (PG skipped without OLYMP_TEST_PG_DSN). sqlc.yaml + queries.sql scaffolded for future generation."
+      ],
+      "started_at": "2026-05-01T11:27:46.05366+02:00",
+      "completed_at": "2026-05-01T11:33:31.477709+02:00",
+      "elapsed_minutes": 5
+    },
+    "task-resilience-\u0026-circuit-breakers": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/resilience: WrapMnemos/Chronos/Nous/Praxis (fortify/circuitbreaker) → ErrLayerUnavailable on open + HealthRegistry.SetCircuitState propagation. Limiter (fortify/ratelimit) keyed by intent|caller for isolation. Replay reruns Nous against frozen memories+signals from provenance for determinism check."
+      ],
+      "started_at": "2026-05-01T12:04:30.512764+02:00",
+      "completed_at": "2026-05-01T12:36:44.277382+02:00",
+      "elapsed_minutes": 32
+    },
+    "task-rollback-\u0026-decision-explainability": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "internal/explain.Build resolves Memory→Signal→Decision→Action→Outcome chain with citations + confidence + Markdown render. internal/rollback.Compensator emits compensating Praxis action when Chronos signal flags regression (default predicate: spike/drop/anomaly ≥0.7) + writes olymp.rollback event. Engine acting step now stamps {id, capability, status} per action so rollback can read capabilities. CLI `olymp explain run-\u003cid\u003e` routes to inspect."
+      ],
+      "started_at": "2026-05-01T12:36:48.686672+02:00",
+      "completed_at": "2026-05-01T12:39:13.217515+02:00",
+      "elapsed_minutes": 2
+    }
+  },
+  "updated_at": "2026-05-01T12:49:52.482018+02:00"
+}

@@ -1,0 +1,180 @@
+version: 2
+
+project_name: olymp
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: olymp
+    main: ./cmd/olymp
+    binary: olymp
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.Commit={{.Commit}}
+      - -X main.BuildDate={{.Date}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: olymp
+    formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+      - 'merge conflict'
+      - Merge pull request
+      - Merge branch
+
+release:
+  draft: true
+  prerelease: auto
+  name_template: "v{{ .Version }}"
+  header: |
+    ## olymp v{{ .Version }}
+
+    Runtime layer of the cognitive stack
+    (Mnemos · Chronos · Nous · Praxis · **Olymp**).
+    Drives `observe → understand → decide → act → learn` end-to-end.
+
+nfpms:
+  - id: olymp
+    package_name: olymp
+    vendor: Felix Geelhaar
+    homepage: "https://github.com/felixgeelhaar/olymp"
+    maintainer: "Felix Geelhaar <felix.geelhaar@gmail.com>"
+    description: |-
+      Olymp — AI runtime / control plane for the cognitive stack.
+      Drives the closed-loop observe → understand → decide → act →
+      learn cycle, holds session and goal state across Mnemos /
+      Chronos / Nous / Praxis, and exposes one front door (CLI ·
+      HTTP · MCP) for users and agents.
+    license: MIT
+    formats:
+      - deb
+      - rpm
+      - apk
+    bindir: /usr/local/bin
+    section: utils
+    contents:
+      - src: ./LICENSE
+        dst: /usr/share/doc/olymp/LICENSE
+        file_info:
+          mode: 0644
+      - src: ./README.md
+        dst: /usr/share/doc/olymp/README.md
+        file_info:
+          mode: 0644
+
+brews:
+  - name: olymp
+    repository:
+      owner: felixgeelhaar
+      name: homebrew-tap
+      branch: main
+      # PAT with `contents: write` on felixgeelhaar/homebrew-tap.
+      # GITHUB_TOKEN can't push to a different repo, so a PAT is
+      # required. Stored as HOMEBREW_TAP_TOKEN repo secret; the
+      # release workflow exposes it as TAP_GITHUB_TOKEN.
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/felixgeelhaar/olymp"
+    description: "AI runtime / control plane for the cognitive stack"
+    license: "MIT"
+    skip_upload: auto
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "chore(formula): bump olymp to {{ .Tag }}"
+    install: |
+      bin.install "olymp"
+    test: |
+      system "#{bin}/olymp", "help"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/felixgeelhaar/olymp:{{ .Version }}-amd64"
+      - "ghcr.io/felixgeelhaar/olymp:latest-amd64"
+    use: buildx
+    goarch: amd64
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+    extra_files:
+      - go.mod
+      - go.sum
+  - image_templates:
+      - "ghcr.io/felixgeelhaar/olymp:{{ .Version }}-arm64"
+      - "ghcr.io/felixgeelhaar/olymp:latest-arm64"
+    use: buildx
+    goarch: arm64
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+    extra_files:
+      - go.mod
+      - go.sum
+
+docker_manifests:
+  - name_template: "ghcr.io/felixgeelhaar/olymp:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/felixgeelhaar/olymp:{{ .Version }}-amd64"
+      - "ghcr.io/felixgeelhaar/olymp:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/felixgeelhaar/olymp:latest"
+    image_templates:
+      - "ghcr.io/felixgeelhaar/olymp:latest-amd64"
+      - "ghcr.io/felixgeelhaar/olymp:latest-arm64"

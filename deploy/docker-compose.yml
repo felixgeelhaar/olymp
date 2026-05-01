@@ -1,0 +1,151 @@
+# Olymp + the four real cognitive-stack services on one Docker network.
+#
+# Image strategy (Option B — published images preferred):
+#
+#   mnemos  → ghcr.io/felixgeelhaar/mnemos:${MNEMOS_TAG}
+#   chronos → ghcr.io/felixgeelhaar/chronos:${CHRONOS_TAG}
+#   nous    → built from sibling source (no public image yet)
+#   praxis  → built from sibling source (no public image yet)
+#   olymp   → built from local Dockerfile
+#
+# Pin versions via .env (copy .env.example). Once nous + praxis publish to
+# GHCR, swap their `build:` blocks for the same `image:` pattern + drop the
+# OLYMP_STACK_ROOT requirement entirely.
+#
+# Quickstart:
+#   cp deploy/.env.example deploy/.env       # edit if needed
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up
+#   ./deploy/demo.sh
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: olymp
+      POSTGRES_PASSWORD: olymp
+      POSTGRES_DB: olymp
+      POSTGRES_MULTIPLE_DATABASES: olymp,mnemos,chronos,nous,praxis
+    volumes:
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-create-databases.sh:ro
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U olymp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mnemos:
+    image: ghcr.io/felixgeelhaar/mnemos:${MNEMOS_TAG:-0.12.0}
+    environment:
+      MNEMOS_SERVE_PORT: "7777"
+      MNEMOS_DB_TYPE: postgres
+      MNEMOS_DB_DSN: postgres://olymp:olymp@postgres:5432/mnemos?sslmode=disable
+    command: ["serve", "--host", "0.0.0.0"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "7777:7777"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7777/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  chronos:
+    image: ghcr.io/felixgeelhaar/chronos:${CHRONOS_TAG:-0.3.0}
+    environment:
+      CHRONOS_HTTP_HOST: "0.0.0.0"
+      CHRONOS_HTTP_PORT: "7778"
+      CHRONOS_DB_TYPE: postgres
+      CHRONOS_DB_CONN: postgres://olymp:olymp@postgres:5432/chronos?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "7778:7778"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7778/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nous:
+    image: ghcr.io/felixgeelhaar/nous:${NOUS_TAG:-0.1.1}
+    environment:
+      NOUS_HTTP_ADDR: ":8080"
+      NOUS_DB_TYPE: postgres
+      NOUS_DB_CONN: postgres://olymp:olymp@postgres:5432/nous?sslmode=disable
+      NOUS_MNEMOS_URL: http://mnemos:7777
+      NOUS_CHRONOS_URL: http://chronos:7778
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mnemos:
+        condition: service_started
+      chronos:
+        condition: service_started
+    ports:
+      - "7780:8080"   # Nous HTTP
+      - "50051:50051" # Nous gRPC
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # praxis: no published image yet — built from sibling source.
+  # When praxis publishes to GHCR, replace `build:` with:
+  #   image: ghcr.io/felixgeelhaar/praxis:${PRAXIS_TAG}
+  praxis:
+    build:
+      context: ${OLYMP_STACK_ROOT:-../..}/praxis
+      dockerfile: Dockerfile
+    environment:
+      PRAXIS_HTTP_PORT: "8080"
+      PRAXIS_DB_TYPE: postgres
+      PRAXIS_DB_CONN: postgres://olymp:olymp@postgres:5432/praxis?sslmode=disable
+      PRAXIS_MNEMOS_URL: http://mnemos:7777/v1/events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mnemos:
+        condition: service_started
+    ports:
+      - "7781:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  olymp:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      OLYMP_DB_TYPE: postgres
+      OLYMP_DB_CONN: postgres://olymp:olymp@postgres:5432/olymp?sslmode=disable
+      OLYMP_MNEMOS_URL: http://mnemos:7777
+      OLYMP_CHRONOS_URL: http://chronos:7778
+      OLYMP_NOUS_URL: http://nous:8080
+      OLYMP_PRAXIS_URL: http://praxis:8080
+    command: ["serve", "--addr", ":8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mnemos:
+        condition: service_started
+      chronos:
+        condition: service_started
+      nous:
+        condition: service_started
+      praxis:
+        condition: service_started
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

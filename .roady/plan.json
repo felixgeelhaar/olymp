@@ -1,0 +1,220 @@
+{
+  "id": "plan-olymp-1777623360",
+  "spec_id": "olymp",
+  "tasks": [
+    {
+      "id": "task-domain-model-&-run-fsm",
+      "title": "Implement Domain Model & Run FSM",
+      "description": "Phase 1 MVP. DDD domain types in `internal/domain/`. RunStatus FSM via `statekit`.",
+      "priority": "high",
+      "estimate": "5d",
+      "depends_on": [],
+      "feature_id": "domain-model-&-run-fsm"
+    },
+    {
+      "id": "task-repository-ports-&-multi-backend-storage",
+      "title": "Implement Repository Ports & Multi-Backend Storage",
+      "description": "Phase 1 MVP. Repository ports + three backends (memory/sqlite/postgres) via sqlc.",
+      "priority": "high",
+      "estimate": "7d",
+      "depends_on": [
+        "task-domain-model-&-run-fsm"
+      ],
+      "feature_id": "repository-ports-&-multi-backend-storage"
+    },
+    {
+      "id": "task-cognitive-layer-adapters",
+      "title": "Implement Cognitive Layer Adapters",
+      "description": "Phase 1 MVP. MnemosPort, ChronosPort, NousPort, PraxisPort + HTTP clients wrapped in fortify/retry.",
+      "priority": "high",
+      "estimate": "6d",
+      "depends_on": [
+        "task-domain-model-&-run-fsm"
+      ],
+      "feature_id": "cognitive-layer-adapters"
+    },
+    {
+      "id": "task-intent-registry",
+      "title": "Implement Intent Registry",
+      "description": "Phase 1 MVP. Typed intent registration + JSON Schema validation. Built-in: `explain`, `remediate`.",
+      "priority": "high",
+      "estimate": "3d",
+      "depends_on": [
+        "task-domain-model-&-run-fsm",
+        "task-repository-ports-&-multi-backend-storage"
+      ],
+      "feature_id": "intent-registry"
+    },
+    {
+      "id": "task-provenance-&-audit-trail",
+      "title": "Implement Provenance & Audit Trail",
+      "description": "Phase 1 MVP. provenance_steps + audit_events tables. Reconstructable Memory \u2192 Signal \u2192 Decision \u2192 Action \u2192 Outcome chain.",
+      "priority": "high",
+      "estimate": "3d",
+      "depends_on": [
+        "task-repository-ports-&-multi-backend-storage"
+      ],
+      "feature_id": "provenance-&-audit-trail"
+    },
+    {
+      "id": "task-loop-engine",
+      "title": "Implement Loop Engine",
+      "description": "Phase 1 MVP. Drives one Run end-to-end through observe \u2192 understand \u2192 decide \u2192 [awaiting_approval] \u2192 act \u2192 learn. Bounded by MaxIterations + Deadline.",
+      "priority": "high",
+      "estimate": "8d",
+      "depends_on": [
+        "task-domain-model-&-run-fsm",
+        "task-cognitive-layer-adapters",
+        "task-intent-registry",
+        "task-provenance-&-audit-trail"
+      ],
+      "feature_id": "loop-engine"
+    },
+    {
+      "id": "task-outcome-writeback-to-mnemos",
+      "title": "Implement Outcome Writeback to Mnemos",
+      "description": "Phase 1 MVP. Learning stage writes `olymp.outcome` event into Mnemos for every Praxis terminal action. Idempotent by (run_id, action_id).",
+      "priority": "high",
+      "estimate": "3d",
+      "depends_on": [
+        "task-loop-engine"
+      ],
+      "feature_id": "outcome-writeback-to-mnemos"
+    },
+    {
+      "id": "task-event-bus-&-streaming",
+      "title": "Implement Event Bus & Streaming",
+      "description": "Phase 1 MVP. In-process EventBus + Stream API with RunFilter. Bounded buffer + drop policy.",
+      "priority": "high",
+      "estimate": "4d",
+      "depends_on": [
+        "task-loop-engine"
+      ],
+      "feature_id": "event-bus-&-streaming"
+    },
+    {
+      "id": "task-public-api-(http)",
+      "title": "Implement Public API (HTTP)",
+      "description": "Phase 1 MVP. OlympAPI over `axi-go`: POST /v1/runs, GET /v1/runs/:id, POST /v1/runs/:id/steer, GET /v1/runs/stream (SSE).",
+      "priority": "high",
+      "estimate": "5d",
+      "depends_on": [
+        "task-loop-engine",
+        "task-event-bus-&-streaming",
+        "task-outcome-writeback-to-mnemos"
+      ],
+      "feature_id": "public-api-(http)"
+    },
+    {
+      "id": "task-observability-(bolt-logging)",
+      "title": "Implement Observability (bolt logging)",
+      "description": "Phase 1 MVP. `*bolt.Logger` injection across services. Fixed loop-step fields. Health endpoint with per-layer adapter status.",
+      "priority": "high",
+      "estimate": "3d",
+      "depends_on": [
+        "task-loop-engine"
+      ],
+      "feature_id": "observability-(bolt-logging)"
+    },
+    {
+      "id": "task-cli-&-plugin-wrappers",
+      "title": "Implement CLI & Plugin Wrappers",
+      "description": "Phase 1 MVP. Hand-rolled CLI: submit/inspect/steer/stream + `olymp explain`/`olymp fix` wrappers. Plugin surface for Claude Code / Codex.",
+      "priority": "high",
+      "estimate": "4d",
+      "depends_on": [
+        "task-public-api-(http)"
+      ],
+      "feature_id": "cli-&-plugin-wrappers"
+    },
+    {
+      "id": "task-approval-gates-&-steering-hardening",
+      "title": "Implement Approval Gates & Steering Hardening",
+      "description": "Phase 2. ApprovalRepo + `awaiting_approval` state. Per-IntentType + per-capability approval policies. Pause/resume across restarts. Kill switch.",
+      "priority": "medium",
+      "estimate": "6d",
+      "depends_on": [
+        "task-cli-&-plugin-wrappers",
+        "task-public-api-(http)"
+      ],
+      "feature_id": "approval-gates-&-steering-hardening"
+    },
+    {
+      "id": "task-resilience-&-circuit-breakers",
+      "title": "Implement Resilience & Circuit Breakers",
+      "description": "Phase 2. `fortify/circuit` per layer adapter. Per-IntentType retry policies. Rate limiting. Run replay for determinism validation.",
+      "priority": "medium",
+      "estimate": "6d",
+      "depends_on": [
+        "task-cognitive-layer-adapters",
+        "task-loop-engine"
+      ],
+      "feature_id": "resilience-&-circuit-breakers"
+    },
+    {
+      "id": "task-rollback-&-decision-explainability",
+      "title": "Implement Rollback & Decision Explainability",
+      "description": "Phase 2. Compensating Praxis action on regression signals. `olymp explain run-<id>` returns full provenance chain with citations + confidence.",
+      "priority": "medium",
+      "estimate": "5d",
+      "depends_on": [
+        "task-loop-engine",
+        "task-provenance-&-audit-trail",
+        "task-cli-&-plugin-wrappers"
+      ],
+      "feature_id": "rollback-&-decision-explainability"
+    },
+    {
+      "id": "task-mcp-runtime-surface",
+      "title": "Implement MCP Runtime Surface",
+      "description": "Phase 3. `mcp-go` exposes Submit/Inspect/Steer/Stream as MCP tools. Intent descriptors auto-published as MCP tool schemas.",
+      "priority": "low",
+      "estimate": "5d",
+      "depends_on": [
+        "task-public-api-(http)",
+        "task-intent-registry"
+      ],
+      "feature_id": "mcp-runtime-surface"
+    },
+    {
+      "id": "task-multi-tenancy-&-plugin-architecture",
+      "title": "Implement Multi-Tenancy & Plugin Architecture",
+      "description": "Phase 3. Org/team/user scopes with isolated runs, sessions, audit. Out-of-tree adapters + IntentType handlers. Federation across runtimes.",
+      "priority": "low",
+      "estimate": "10d",
+      "depends_on": [
+        "task-cognitive-layer-adapters",
+        "task-intent-registry",
+        "task-repository-ports-&-multi-backend-storage"
+      ],
+      "feature_id": "multi-tenancy-&-plugin-architecture"
+    },
+    {
+      "id": "task-distributed-loop-runner",
+      "title": "Implement Distributed Loop Runner",
+      "description": "Phase 3. Horizontally scalable workers + shared run queue. Run leasing + heartbeat + crash recovery. Backpressure.",
+      "priority": "low",
+      "estimate": "8d",
+      "depends_on": [
+        "task-loop-engine",
+        "task-repository-ports-&-multi-backend-storage"
+      ],
+      "feature_id": "distributed-loop-runner"
+    },
+    {
+      "id": "task-compliance-audit-export-&-dashboards",
+      "title": "Implement Compliance Audit Export & Dashboards",
+      "description": "Phase 3. Org dashboards + exportable audit (SOC 2 / HIPAA / GDPR). Configurable retention + redaction.",
+      "priority": "low",
+      "estimate": "7d",
+      "depends_on": [
+        "task-provenance-&-audit-trail",
+        "task-multi-tenancy-&-plugin-architecture"
+      ],
+      "feature_id": "compliance-audit-export-&-dashboards"
+    }
+  ],
+  "approval_status": "approved",
+  "created_at": "2026-05-01T10:16:00.536202+02:00",
+  "updated_at": "2026-05-01T10:29:33.659251+02:00"
+}

@@ -1,0 +1,15 @@
+.git
+.github
+.idea
+.vscode
+.DS_Store
+bin/
+dist/
+coverage.out
+coverage.html
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.local
+docs/

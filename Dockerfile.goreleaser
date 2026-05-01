@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1.7
+
+# Runtime-only image consumed by goreleaser. The `olymp` binary is built
+# by goreleaser (see .goreleaser.yaml builds:) and dropped into the build
+# context next to this file; this Dockerfile just packages it on top of
+# distroless.
+#
+# CGO is disabled in the goreleaser build, so the binary runs on any
+# Linux/amd64 or arm64 base image without a libc dependency.
+#
+# Local Docker builds (no goreleaser) keep using the existing Dockerfile,
+# which performs a self-contained multi-stage build from source.
+
+FROM gcr.io/distroless/static-debian12:nonroot
+
+LABEL org.opencontainers.image.title="olymp" \
+      org.opencontainers.image.description="AI runtime / control plane for the cognitive stack" \
+      org.opencontainers.image.source="https://github.com/felixgeelhaar/olymp" \
+      org.opencontainers.image.licenses="MIT"
+
+COPY olymp /app/olymp
+
+USER nonroot:nonroot
+EXPOSE 8080
+
+ENTRYPOINT ["/app/olymp"]
+CMD ["serve", "--addr", ":8080"]

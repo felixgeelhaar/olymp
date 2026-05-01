@@ -1,0 +1,26 @@
+# Build artifacts
+bin/
+dist/
+olymp
+*.exe
+*.test
+*.out
+
+# Coverage
+coverage.out
+coverage.html
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local override
+.env
+.env.local
+settings.local.json
