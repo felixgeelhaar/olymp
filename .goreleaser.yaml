@@ -108,30 +108,10 @@ nfpms:
         file_info:
           mode: 0644
 
-brews:
-  - name: olymp
-    repository:
-      owner: felixgeelhaar
-      name: homebrew-tap
-      branch: main
-      # PAT with `contents: write` on felixgeelhaar/homebrew-tap.
-      # GITHUB_TOKEN can't push to a different repo, so a PAT is
-      # required. Stored as HOMEBREW_TAP_TOKEN repo secret; the
-      # release workflow exposes it as TAP_GITHUB_TOKEN.
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
-    directory: Formula
-    homepage: "https://github.com/felixgeelhaar/olymp"
-    description: "AI runtime / control plane for the cognitive stack"
-    license: "MIT"
-    skip_upload: auto
-    commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
-    commit_msg_template: "chore(formula): bump olymp to {{ .Tag }}"
-    install: |
-      bin.install "olymp"
-    test: |
-      system "#{bin}/olymp", "help"
+# Homebrew tap publishing is intentionally omitted from v0.1.0. To
+# enable later, restore the brews: block (mirror the chronos/nous
+# config) and add the HOMEBREW_TAP_TOKEN repo secret + the verify step
+# in .github/workflows/release.yml.
 
 dockers:
   - image_templates:
