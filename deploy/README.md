@@ -33,7 +33,7 @@ No mocks: every container runs the real upstream binary.
 | chronos | `ghcr.io/felixgeelhaar/chronos:0.3.0` | `CHRONOS_TAG` env (`.env`) |
 | nous | `ghcr.io/felixgeelhaar/nous:0.1.1` | `NOUS_TAG` env (`.env`) |
 | praxis | sibling repo build | `OLYMP_STACK_ROOT/praxis/` |
-| olymp | local Dockerfile | this repo |
+| olymp | `ghcr.io/felixgeelhaar/olymp:0.1.2` | `OLYMP_TAG` env (`.env`) |
 
 Mnemos + Chronos + Nous pull pinned production images from GHCR. Praxis
 is still in active development; it builds from sibling source on disk.

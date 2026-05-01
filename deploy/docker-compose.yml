@@ -122,9 +122,7 @@ services:
       retries: 10
 
   olymp:
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: ghcr.io/felixgeelhaar/olymp:${OLYMP_TAG:-0.1.2}
     environment:
       OLYMP_DB_TYPE: postgres
       OLYMP_DB_CONN: postgres://olymp:olymp@postgres:5432/olymp?sslmode=disable
