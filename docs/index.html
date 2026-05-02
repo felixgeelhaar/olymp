@@ -214,117 +214,47 @@
     each layer also stays usable on its own.
   </p>
 
-  <div class="diagram">
-<svg viewBox="0 0 920 460" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" role="img" aria-labelledby="arch-svg-title arch-svg-desc">
-  <title id="arch-svg-title">Olymp architecture</title>
-  <desc id="arch-svg-desc">Broken services emit metrics scraped by Prometheus. Grafana renders them. A bridge converts the metrics into observations posted to the time-series layer. Olymp drives the cognitive loop across memory, time, decision, and execution layers, all sharing a Postgres.</desc>
-  <style>
-    .box { fill: #14181d; stroke: #2a323d; stroke-width: 1; }
-    .box-accent { stroke: #7ad1ff; }
-    .box-warm { stroke: #ffb86b; }
-    .label { fill: #e6e8eb; }
-    .label-dim { fill: #8a93a0; font-size: 11px; }
-    .label-accent { fill: #7ad1ff; }
-    .label-warm { fill: #ffb86b; }
-    .arrow-data { stroke: #4a5562; stroke-width: 1.5; fill: none; }
-    .arrow-control { stroke: #7ad1ff; stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; }
-    .legend-text { fill: #8a93a0; font-size: 11px; }
-    @media (prefers-color-scheme: light) {
-      .box { fill: #ffffff; stroke: #d1d5db; }
-      .box-accent { stroke: #0066b3; }
-      .box-warm { stroke: #b04400; }
-      .label { fill: #131720; }
-      .label-dim { fill: #5a6272; }
-      .label-accent { fill: #0066b3; }
-      .label-warm { fill: #b04400; }
-      .arrow-data { stroke: #9aa3af; }
-      .arrow-control { stroke: #0066b3; }
-      .legend-text { fill: #5a6272; }
-    }
-  </style>
-  <defs>
-    <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5562"/>
-    </marker>
-    <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7ad1ff"/>
-    </marker>
-  </defs>
+  <div class="diagram" role="img" aria-label="Olymp architecture: broken services emit metrics scraped by Prometheus; the bridge converts them to observations posted to Chronos; Olymp drives the cognitive loop across memory, time, decision, and execution layers, all sharing a Postgres.">
+    <div class="pipe">
+      <div class="pipe-cell">
+        <span class="pipe-kicker">demo target</span>
+        <p class="pipe-title">flaky-payments · slow-checkout</p>
+        <p class="pipe-sub">/metrics · synthetic incidents</p>
+      </div>
+      <div class="pipe-cell">
+        <span class="pipe-kicker">observability</span>
+        <p class="pipe-title">Prometheus · Grafana</p>
+        <p class="pipe-sub">5s scrape · live dashboard</p>
+      </div>
+      <div class="pipe-cell accent">
+        <span class="pipe-kicker">bridge</span>
+        <p class="pipe-title">prom2chronos</p>
+        <p class="pipe-sub">PromQL → /v1/ingest</p>
+      </div>
+      <div class="pipe-cell accent">
+        <span class="pipe-kicker">runtime</span>
+        <p class="pipe-title">Olymp</p>
+        <p class="pipe-sub">drives the loop · /v1/runs · MCP · CLI</p>
+      </div>
+    </div>
 
-  <!-- Column 1: broken services -->
-  <text class="label-dim" x="90" y="20" text-anchor="middle">demo target services</text>
-  <rect class="box" x="20" y="40" width="140" height="50" rx="6"/>
-  <text class="label" x="90" y="62" text-anchor="middle">flaky-payments</text>
-  <text class="label-dim" x="90" y="78" text-anchor="middle">/metrics</text>
-  <rect class="box" x="20" y="110" width="140" height="50" rx="6"/>
-  <text class="label" x="90" y="132" text-anchor="middle">slow-checkout</text>
-  <text class="label-dim" x="90" y="148" text-anchor="middle">/metrics</text>
+    <div class="pipe-band accent">
+      <h4>Cognitive layers · plugged into Olymp</h4>
+      <div class="row">
+        <strong>Mnemos</strong><span>memory · claims, events, point-in-time replay</span>
+        <strong>Chronos</strong><span>time · pattern detection over the bridged observations</span>
+        <strong>Nous</strong><span>decisions · commitment extraction, risk evaluation</span>
+        <strong>Praxis</strong><span>execution · capability registry, audit, idempotency</span>
+      </div>
+    </div>
 
-  <!-- Column 2: Prometheus + bridge -->
-  <text class="label-dim" x="280" y="20" text-anchor="middle">observability</text>
-  <rect class="box" x="200" y="40" width="160" height="50" rx="6"/>
-  <text class="label" x="280" y="62" text-anchor="middle">Prometheus</text>
-  <text class="label-dim" x="280" y="78" text-anchor="middle">scrape every 5s</text>
-  <rect class="box" x="200" y="110" width="160" height="50" rx="6"/>
-  <text class="label" x="280" y="132" text-anchor="middle">Grafana</text>
-  <text class="label-dim" x="280" y="148" text-anchor="middle">live dashboard</text>
-  <rect class="box" x="200" y="180" width="160" height="50" rx="6"/>
-  <text class="label" x="280" y="202" text-anchor="middle">prom2chronos</text>
-  <text class="label-dim" x="280" y="218" text-anchor="middle">PromQL → ingest</text>
-
-  <!-- Column 3: cognitive layers -->
-  <text class="label-accent" x="510" y="20" text-anchor="middle">cognitive layers</text>
-  <rect class="box box-accent" x="430" y="40" width="160" height="50" rx="6"/>
-  <text class="label-accent" x="510" y="62" text-anchor="middle">Memory · Mnemos</text>
-  <text class="label-dim" x="510" y="78" text-anchor="middle">claims, events</text>
-  <rect class="box box-accent" x="430" y="110" width="160" height="50" rx="6"/>
-  <text class="label-accent" x="510" y="132" text-anchor="middle">Time · Chronos</text>
-  <text class="label-dim" x="510" y="148" text-anchor="middle">patterns, signals</text>
-  <rect class="box box-accent" x="430" y="180" width="160" height="50" rx="6"/>
-  <text class="label-accent" x="510" y="202" text-anchor="middle">Decision · Nous</text>
-  <text class="label-dim" x="510" y="218" text-anchor="middle">extract, evaluate</text>
-  <rect class="box box-accent" x="430" y="250" width="160" height="50" rx="6"/>
-  <text class="label-accent" x="510" y="272" text-anchor="middle">Execution · Praxis</text>
-  <text class="label-dim" x="510" y="288" text-anchor="middle">capabilities, audit</text>
-
-  <!-- Column 4: Olymp + Postgres -->
-  <text class="label-warm" x="780" y="20" text-anchor="middle">runtime</text>
-  <rect class="box box-warm" x="660" y="40" width="240" height="120" rx="10"/>
-  <text class="label-warm" x="780" y="80" text-anchor="middle" font-size="18" font-weight="bold">Olymp</text>
-  <text class="label-dim" x="780" y="102" text-anchor="middle">drives the loop</text>
-  <text class="label-dim" x="780" y="120" text-anchor="middle">/v1/runs · MCP · CLI</text>
-  <text class="label-dim" x="780" y="138" text-anchor="middle">replay from audit</text>
-
-  <rect class="box" x="660" y="200" width="240" height="50" rx="6"/>
-  <text class="label" x="780" y="222" text-anchor="middle">Postgres</text>
-  <text class="label-dim" x="780" y="238" text-anchor="middle">one DB per layer</text>
-
-  <!-- Data-plane arrows: services → prom; prom → grafana + bridge; bridge → chronos -->
-  <path class="arrow-data" d="M 160 65 L 200 65" marker-end="url(#ad)"/>
-  <path class="arrow-data" d="M 160 135 C 180 135, 180 80, 200 75" marker-end="url(#ad)"/>
-  <path class="arrow-data" d="M 280 90 L 280 110" marker-end="url(#ad)"/>
-  <path class="arrow-data" d="M 280 90 L 280 180" marker-end="url(#ad)"/>
-  <path class="arrow-data" d="M 360 205 L 430 130" marker-end="url(#ad)"/>
-
-  <!-- Control-plane arrows: Olymp ↔ four layers -->
-  <path class="arrow-control" d="M 660 80 L 590 65" marker-end="url(#ac)"/>
-  <path class="arrow-control" d="M 660 100 L 590 135" marker-end="url(#ac)"/>
-  <path class="arrow-control" d="M 660 120 L 590 205" marker-end="url(#ac)"/>
-  <path class="arrow-control" d="M 660 140 L 590 275" marker-end="url(#ac)"/>
-
-  <!-- Layer ↔ Postgres -->
-  <path class="arrow-data" d="M 590 275 C 640 275, 660 250, 700 250" marker-end="url(#ad)"/>
-  <path class="arrow-data" d="M 590 65 C 640 65, 700 80, 770 200" marker-end="url(#ad)"/>
-
-  <!-- Olymp ↔ Postgres -->
-  <path class="arrow-data" d="M 780 160 L 780 200" marker-end="url(#ad)"/>
-
-  <!-- Legend -->
-  <line class="arrow-data" x1="20" y1="430" x2="60" y2="430" marker-end="url(#ad)"/>
-  <text class="legend-text" x="70" y="434">data plane (HTTP, scrape, ingest)</text>
-  <line class="arrow-control" x1="320" y1="430" x2="360" y2="430" marker-end="url(#ac)"/>
-  <text class="legend-text" x="370" y="434">control plane (Olymp port calls)</text>
-</svg>
+    <div class="pipe-band">
+      <div class="row">
+        <strong>Storage</strong><span>shared Postgres · one logical DB per service</span>
+        <strong>Surface</strong><span>HTTP /v1/runs · SSE /v1/runs/stream · MCP · CLI</span>
+        <strong>Audit</strong><span>every run replayable from provenance · same chain that paged also reproduces the decision</span>
+      </div>
+    </div>
   </div>
 </section>
 
