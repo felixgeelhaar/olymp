@@ -3,17 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Olymp — AI runtime for the cognitive stack</title>
-  <meta name="description" content="Olymp is the runtime layer of the four-system cognitive stack (Mnemos · Chronos · Nous · Praxis). Demo: closed-loop incident response over Prometheus + Grafana.">
+  <title>Olymp — durable, auditable orchestrator for agentic loops</title>
+  <meta name="description" content="Olymp orchestrates the observe → understand → decide → act → learn loop end-to-end with full provenance. Bring your own intelligence; Olymp drives it durably.">
+  <meta property="og:title" content="Olymp — durable, auditable orchestrator for agentic loops">
+  <meta property="og:description" content="Closed-loop incident response with full provenance across memory, time-series, decisions, and execution. Open source, MIT.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+<a class="skip-link" href="#main">Skip to content</a>
+
 <header>
   <div class="wrap">
-    <div class="logo">olymp<span>.</span></div>
-    <nav>
+    <div class="logo" aria-label="Olymp">olymp<span aria-hidden="true">.</span></div>
+    <nav aria-label="Primary">
       <a href="#scenario">Scenario</a>
+      <a href="#vs">Vs. alternatives</a>
       <a href="#architecture">Architecture</a>
       <a href="#run">Run it</a>
       <a href="https://github.com/felixgeelhaar/olymp">GitHub</a>
@@ -21,52 +26,69 @@
   </div>
 </header>
 
-<div class="wrap">
+<main id="main" class="wrap">
 
 <section class="hero">
-  <h1>The AI control plane <span class="accent">for complex systems.</span></h1>
+  <p class="kicker">For SRE & platform teams putting AI into production.</p>
+  <h1>The orchestrator <span class="accent">your agents are missing.</span></h1>
   <p class="lede">
-    Olymp is the runtime layer of the four-system cognitive stack
-    (Mnemos · Chronos · Nous · Praxis). It drives the closed loop
-    <em>observe → understand → decide → act → learn</em> end-to-end,
-    with a single audit trail across every system.
+    Olymp drives the closed loop <em>observe → understand → decide → act → learn</em>
+    end-to-end with a single audit trail. Durable. Replayable.
+    Bring your own intelligence — Olymp wires it into a system you can
+    actually operate.
   </p>
   <div class="cta-row">
     <a class="cta primary" href="#run">Run the demo</a>
-    <a class="cta" href="https://github.com/felixgeelhaar/olymp">github.com/felixgeelhaar/olymp</a>
+    <a class="cta" href="https://github.com/felixgeelhaar/olymp" aria-label="View Olymp on GitHub">★ on GitHub</a>
+    <a class="cta ghost" href="#scenario">See the scenario ↓</a>
   </div>
+  <ul class="badges" aria-label="At a glance">
+    <li>MIT licensed</li>
+    <li>Go · single binary</li>
+    <li>HTTP · MCP · CLI</li>
+    <li>Postgres · SQLite · in-memory</li>
+  </ul>
 </section>
 
-<section id="scenario">
-  <h2>Scenario</h2>
-  <h3>Two services start misbehaving. Watch Olymp react.</h3>
+<section id="scenario" aria-labelledby="scenario-heading">
+  <p class="kicker">Reference scenario</p>
+  <h2 id="scenario-heading">Two services start misbehaving. Watch Olymp react.</h2>
   <p>
     The reference demo boots two deliberately-broken sample services
     alongside the cognitive stack and pipes their Prometheus metrics
-    into Chronos. As the failure pattern builds in the dashboard,
-    Olymp's loop pulls the same observations through every cognitive
-    layer and writes the outcome back into Mnemos.
+    into Chronos. As the failure pattern builds in Grafana, Olymp's
+    loop pulls the same observations through every layer and writes
+    the outcome back into memory.
   </p>
+
+  <div class="callout callout-honest">
+    <strong>What this proves.</strong>
+    The demo validates the <em>orchestrator</em>, not anomaly detection
+    or LLM reasoning. The broken services degrade on a deterministic
+    schedule. The Praxis action handler is a stub. Bring your own
+    detector and your own action library; Olymp is the durable seam
+    between them.
+  </div>
 
   <div class="cols">
     <div class="card">
-      <h4>flaky-payments</h4>
+      <h3>flaky-payments</h3>
       <p>Error rate climbs from 2% baseline to 40% over three minutes. Visible in Grafana, ingested into Chronos via the prom2chronos bridge.</p>
     </div>
     <div class="card">
-      <h4>slow-checkout</h4>
-      <p>Request latency drifts upward 60ms / minute. Capped at 2.5s p99. The kind of regression no binary alarm catches.</p>
+      <h3>slow-checkout</h3>
+      <p>Request latency drifts upward 60ms per minute, capped at 2.5s p99. The kind of regression a binary alarm misses.</p>
     </div>
     <div class="card">
-      <h4>Olymp loop</h4>
-      <p>Each <code>explain</code> or <code>remediate</code> intent runs the full cognitive loop. Provenance touches every layer; Mnemos records the outcome.</p>
+      <h3>Olymp loop</h3>
+      <p>Each <code>explain</code> or <code>remediate</code> intent runs the full cognitive loop. Provenance touches every layer; memory records the outcome for the next iteration.</p>
     </div>
   </div>
 
-  <h3 style="margin-top: 48px;">One run, end to end</h3>
+  <h3 class="subhead">One run, end to end</h3>
   <p class="dim">From a fresh stack — runs complete in seconds.</p>
-  <div class="terminal">
-    <div class="bar">
+  <div class="terminal" role="figure" aria-label="Terminal output of demo-full.sh">
+    <div class="bar" aria-hidden="true">
       <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
       <span class="label">$ ./deploy/demo-full.sh</span>
     </div>
@@ -100,216 +122,297 @@
 }</code></pre>
   </div>
 
-  <h3 style="margin-top: 48px;">What each stage does</h3>
+  <h3 class="subhead">What happens at each stage</h3>
   <div class="timeline">
     <div class="stage">observing</div>
-    <div class="what">Olymp asks <em>Mnemos</em> for active claims about <code>payments-latency</code>. Returns the SLO claim, the rollback hypothesis, and the service ownership graph.</div>
+    <div class="what">Olymp asks the memory layer for active claims about the subject. Returns SLO claims, hypotheses, and ownership relationships.</div>
 
     <div class="stage">understanding</div>
-    <div class="what">Olymp asks <em>Chronos</em> for signals on the demo scope. <code>prom2chronos</code> has been posting <em>payments_error_rate</em> + <em>checkout_p99_latency_seconds</em> observations every 10s; Chronos's compute pipeline derives spike / drift signals from the time series.</div>
+    <div class="what">Olymp asks the time-series layer for signals on the demo scope. The bridge has been posting <em>error_rate</em> and <em>p99 latency</em> observations every 10s.</div>
 
     <div class="stage">deciding</div>
-    <div class="what">Olymp submits the merged context (memories + signals) to <em>Nous</em> via <code>POST /v1/extract</code>. Nous extracts commitments, records a decision, returns its <code>decision_id</code>.</div>
+    <div class="what">Olymp submits the merged context (memories + signals) to the decision layer. The layer records its reasoning with a stable <code>decision_id</code>.</div>
 
     <div class="stage">acting</div>
-    <div class="what">Olymp sends an <code>ActionRequest</code> to <em>Praxis</em>. The action lands at the registered capability handler — in production, that's where the rollback / restart / page actually executes.</div>
+    <div class="what">Olymp dispatches an <code>ActionRequest</code> to the execution layer. In the demo this is a stub; in production it routes to a registered capability handler — rollback, restart, page.</div>
 
     <div class="stage">learning</div>
-    <div class="what">Olymp writes the outcome back to <em>Mnemos</em> as a structured event. The next iteration's <em>observing</em> stage will surface it. The loop is closed.</div>
+    <div class="what">Olymp writes the outcome back to memory as a structured event. The next iteration's <em>observing</em> stage sees it. The loop is closed.</div>
   </div>
 </section>
 
-<section id="architecture">
-  <h2>Architecture</h2>
-  <h3>Five containers, one Docker network, real upstream binaries.</h3>
+<section id="vs" aria-labelledby="vs-heading">
+  <p class="kicker">How it differs</p>
+  <h2 id="vs-heading">Where Olymp fits.</h2>
   <p>
-    Nothing is mocked. Each cognitive layer runs the same image you'd
-    deploy in production, against a shared Postgres. Olymp speaks each
-    layer's real HTTP API; adapters translate Olymp's port verbs to the
-    actual surface so each service stays usable on its own.
+    Olymp is closer to <strong>durable workflow runtimes</strong>
+    (Temporal, Restate) than to <strong>agent frameworks</strong>
+    (LangGraph, AutoGen). It exists for the seam neither side covers:
+    the operationally-honest, audit-first loop that crosses memory,
+    time, decision, and action.
+  </p>
+  <div class="vs-table" role="table" aria-label="Comparison with related tools">
+    <div class="vs-row vs-head" role="row">
+      <span role="columnheader">Tool</span>
+      <span role="columnheader">Solves</span>
+      <span role="columnheader">Olymp's seam</span>
+    </div>
+    <div class="vs-row" role="row">
+      <span role="cell"><strong>LangGraph</strong></span>
+      <span role="cell">Graph executor for LLM calls.</span>
+      <span role="cell">Olymp orchestrates <em>systems</em>, not LLM messages.</span>
+    </div>
+    <div class="vs-row" role="row">
+      <span role="cell"><strong>Temporal / Restate</strong></span>
+      <span role="cell">Durable workflows for any business logic.</span>
+      <span role="cell">Olymp ships a four-port cognitive contract + replay-from-audit out of the box.</span>
+    </div>
+    <div class="vs-row" role="row">
+      <span role="cell"><strong>Computer Use / Swarm</strong></span>
+      <span role="cell">Model-driven action and handoffs.</span>
+      <span role="cell">Olymp records every step and gates risky ones — the model decides, Olymp commits.</span>
+    </div>
+    <div class="vs-row" role="row">
+      <span role="cell"><strong>AIOps platforms</strong></span>
+      <span role="cell">Closed-vendor incident loops.</span>
+      <span role="cell">Olymp is open source, single binary, your model, your data.</span>
+    </div>
+  </div>
+
+  <h3 class="subhead">Replay-from-audit</h3>
+  <p>
+    Every run's provenance is enough to <em>re-execute</em> the loop —
+    same inputs, same decisions — without hitting any layer's
+    side-effecting endpoints. A regression in the decision layer
+    surfaces as a delta against the recorded chain. This is the
+    feature that pays for an orchestration runtime; the demo's
+    timeline output is one half of it, the replay tooling is the
+    other.
+  </p>
+</section>
+
+<section id="architecture" aria-labelledby="arch-heading">
+  <p class="kicker">Architecture</p>
+  <h2 id="arch-heading">Five containers, one Docker network, real upstream binaries.</h2>
+  <p>
+    Each layer runs the same image you'd deploy in production, against
+    a shared Postgres. Olymp speaks every layer's real HTTP API; thin
+    adapters translate Olymp's port verbs to the actual surface so
+    each layer also stays usable on its own.
   </p>
 
   <div class="diagram">
-<svg viewBox="0 0 920 520" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">
+<svg viewBox="0 0 920 460" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" role="img" aria-labelledby="arch-svg-title arch-svg-desc">
+  <title id="arch-svg-title">Olymp architecture</title>
+  <desc id="arch-svg-desc">Broken services emit metrics scraped by Prometheus. Grafana renders them. A bridge converts the metrics into observations posted to the time-series layer. Olymp drives the cognitive loop across memory, time, decision, and execution layers, all sharing a Postgres.</desc>
   <style>
     .box { fill: #14181d; stroke: #2a323d; stroke-width: 1; }
     .box-accent { stroke: #7ad1ff; }
+    .box-warm { stroke: #ffb86b; }
     .label { fill: #e6e8eb; }
     .label-dim { fill: #8a93a0; font-size: 11px; }
     .label-accent { fill: #7ad1ff; }
-    .arrow { stroke: #4a5562; stroke-width: 1.5; fill: none; }
-    .arrow-bright { stroke: #7ad1ff; stroke-width: 1.5; fill: none; }
+    .label-warm { fill: #ffb86b; }
+    .arrow-data { stroke: #4a5562; stroke-width: 1.5; fill: none; }
+    .arrow-control { stroke: #7ad1ff; stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; }
+    .legend-text { fill: #8a93a0; font-size: 11px; }
     @media (prefers-color-scheme: light) {
       .box { fill: #ffffff; stroke: #d1d5db; }
       .box-accent { stroke: #0066b3; }
+      .box-warm { stroke: #b04400; }
       .label { fill: #131720; }
       .label-dim { fill: #5a6272; }
       .label-accent { fill: #0066b3; }
-      .arrow { stroke: #9aa3af; }
-      .arrow-bright { stroke: #0066b3; }
+      .label-warm { fill: #b04400; }
+      .arrow-data { stroke: #9aa3af; }
+      .arrow-control { stroke: #0066b3; }
+      .legend-text { fill: #5a6272; }
     }
   </style>
   <defs>
-    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5562"/>
     </marker>
-    <marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#7ad1ff"/>
     </marker>
   </defs>
 
-  <!-- Top row: broken services -->
-  <rect class="box" x="20" y="30" width="160" height="60" rx="8"/>
-  <text class="label" x="100" y="55" text-anchor="middle">flaky-payments</text>
-  <text class="label-dim" x="100" y="74" text-anchor="middle">/metrics + /pay</text>
+  <!-- Column 1: broken services -->
+  <text class="label-dim" x="90" y="20" text-anchor="middle">demo target services</text>
+  <rect class="box" x="20" y="40" width="140" height="50" rx="6"/>
+  <text class="label" x="90" y="62" text-anchor="middle">flaky-payments</text>
+  <text class="label-dim" x="90" y="78" text-anchor="middle">/metrics</text>
+  <rect class="box" x="20" y="110" width="140" height="50" rx="6"/>
+  <text class="label" x="90" y="132" text-anchor="middle">slow-checkout</text>
+  <text class="label-dim" x="90" y="148" text-anchor="middle">/metrics</text>
 
-  <rect class="box" x="200" y="30" width="160" height="60" rx="8"/>
-  <text class="label" x="280" y="55" text-anchor="middle">slow-checkout</text>
-  <text class="label-dim" x="280" y="74" text-anchor="middle">/metrics + /checkout</text>
+  <!-- Column 2: Prometheus + bridge -->
+  <text class="label-dim" x="280" y="20" text-anchor="middle">observability</text>
+  <rect class="box" x="200" y="40" width="160" height="50" rx="6"/>
+  <text class="label" x="280" y="62" text-anchor="middle">Prometheus</text>
+  <text class="label-dim" x="280" y="78" text-anchor="middle">scrape every 5s</text>
+  <rect class="box" x="200" y="110" width="160" height="50" rx="6"/>
+  <text class="label" x="280" y="132" text-anchor="middle">Grafana</text>
+  <text class="label-dim" x="280" y="148" text-anchor="middle">live dashboard</text>
+  <rect class="box" x="200" y="180" width="160" height="50" rx="6"/>
+  <text class="label" x="280" y="202" text-anchor="middle">prom2chronos</text>
+  <text class="label-dim" x="280" y="218" text-anchor="middle">PromQL → ingest</text>
 
-  <!-- Prometheus -->
-  <rect class="box" x="100" y="140" width="180" height="60" rx="8"/>
-  <text class="label" x="190" y="165" text-anchor="middle">Prometheus</text>
-  <text class="label-dim" x="190" y="184" text-anchor="middle">scrape every 5s</text>
+  <!-- Column 3: cognitive layers -->
+  <text class="label-accent" x="510" y="20" text-anchor="middle">cognitive layers</text>
+  <rect class="box box-accent" x="430" y="40" width="160" height="50" rx="6"/>
+  <text class="label-accent" x="510" y="62" text-anchor="middle">Memory · Mnemos</text>
+  <text class="label-dim" x="510" y="78" text-anchor="middle">claims, events</text>
+  <rect class="box box-accent" x="430" y="110" width="160" height="50" rx="6"/>
+  <text class="label-accent" x="510" y="132" text-anchor="middle">Time · Chronos</text>
+  <text class="label-dim" x="510" y="148" text-anchor="middle">patterns, signals</text>
+  <rect class="box box-accent" x="430" y="180" width="160" height="50" rx="6"/>
+  <text class="label-accent" x="510" y="202" text-anchor="middle">Decision · Nous</text>
+  <text class="label-dim" x="510" y="218" text-anchor="middle">extract, evaluate</text>
+  <rect class="box box-accent" x="430" y="250" width="160" height="50" rx="6"/>
+  <text class="label-accent" x="510" y="272" text-anchor="middle">Execution · Praxis</text>
+  <text class="label-dim" x="510" y="288" text-anchor="middle">capabilities, audit</text>
 
-  <!-- Grafana -->
-  <rect class="box" x="20" y="250" width="180" height="60" rx="8"/>
-  <text class="label" x="110" y="275" text-anchor="middle">Grafana</text>
-  <text class="label-dim" x="110" y="294" text-anchor="middle">live dashboard</text>
+  <!-- Column 4: Olymp + Postgres -->
+  <text class="label-warm" x="780" y="20" text-anchor="middle">runtime</text>
+  <rect class="box box-warm" x="660" y="40" width="240" height="120" rx="10"/>
+  <text class="label-warm" x="780" y="80" text-anchor="middle" font-size="18" font-weight="bold">Olymp</text>
+  <text class="label-dim" x="780" y="102" text-anchor="middle">drives the loop</text>
+  <text class="label-dim" x="780" y="120" text-anchor="middle">/v1/runs · MCP · CLI</text>
+  <text class="label-dim" x="780" y="138" text-anchor="middle">replay from audit</text>
 
-  <!-- prom2chronos -->
-  <rect class="box" x="220" y="250" width="180" height="60" rx="8"/>
-  <text class="label" x="310" y="275" text-anchor="middle">prom2chronos</text>
-  <text class="label-dim" x="310" y="294" text-anchor="middle">PromQL → /v1/ingest</text>
+  <rect class="box" x="660" y="200" width="240" height="50" rx="6"/>
+  <text class="label" x="780" y="222" text-anchor="middle">Postgres</text>
+  <text class="label-dim" x="780" y="238" text-anchor="middle">one DB per layer</text>
 
-  <!-- Cognitive stack -->
-  <rect class="box box-accent" x="430" y="30" width="160" height="60" rx="8"/>
-  <text class="label-accent" x="510" y="55" text-anchor="middle">Mnemos</text>
-  <text class="label-dim" x="510" y="74" text-anchor="middle">memory · claims</text>
+  <!-- Data-plane arrows: services → prom; prom → grafana + bridge; bridge → chronos -->
+  <path class="arrow-data" d="M 160 65 L 200 65" marker-end="url(#ad)"/>
+  <path class="arrow-data" d="M 160 135 C 180 135, 180 80, 200 75" marker-end="url(#ad)"/>
+  <path class="arrow-data" d="M 280 90 L 280 110" marker-end="url(#ad)"/>
+  <path class="arrow-data" d="M 280 90 L 280 180" marker-end="url(#ad)"/>
+  <path class="arrow-data" d="M 360 205 L 430 130" marker-end="url(#ad)"/>
 
-  <rect class="box box-accent" x="600" y="30" width="160" height="60" rx="8"/>
-  <text class="label-accent" x="680" y="55" text-anchor="middle">Chronos</text>
-  <text class="label-dim" x="680" y="74" text-anchor="middle">time · patterns</text>
+  <!-- Control-plane arrows: Olymp ↔ four layers -->
+  <path class="arrow-control" d="M 660 80 L 590 65" marker-end="url(#ac)"/>
+  <path class="arrow-control" d="M 660 100 L 590 135" marker-end="url(#ac)"/>
+  <path class="arrow-control" d="M 660 120 L 590 205" marker-end="url(#ac)"/>
+  <path class="arrow-control" d="M 660 140 L 590 275" marker-end="url(#ac)"/>
 
-  <rect class="box box-accent" x="430" y="140" width="160" height="60" rx="8"/>
-  <text class="label-accent" x="510" y="165" text-anchor="middle">Nous</text>
-  <text class="label-dim" x="510" y="184" text-anchor="middle">decisions</text>
+  <!-- Layer ↔ Postgres -->
+  <path class="arrow-data" d="M 590 275 C 640 275, 660 250, 700 250" marker-end="url(#ad)"/>
+  <path class="arrow-data" d="M 590 65 C 640 65, 700 80, 770 200" marker-end="url(#ad)"/>
 
-  <rect class="box box-accent" x="600" y="140" width="160" height="60" rx="8"/>
-  <text class="label-accent" x="680" y="165" text-anchor="middle">Praxis</text>
-  <text class="label-dim" x="680" y="184" text-anchor="middle">execution</text>
+  <!-- Olymp ↔ Postgres -->
+  <path class="arrow-data" d="M 780 160 L 780 200" marker-end="url(#ad)"/>
 
-  <!-- Olymp -->
-  <rect class="box box-accent" x="500" y="280" width="190" height="80" rx="10"/>
-  <text class="label-accent" x="595" y="310" text-anchor="middle" font-size="16" font-weight="bold">Olymp</text>
-  <text class="label-dim" x="595" y="330" text-anchor="middle">runtime · audit · steering</text>
-  <text class="label-dim" x="595" y="346" text-anchor="middle">/v1/runs · MCP · CLI</text>
-
-  <!-- Postgres -->
-  <rect class="box" x="500" y="410" width="190" height="60" rx="8"/>
-  <text class="label" x="595" y="435" text-anchor="middle">Postgres</text>
-  <text class="label-dim" x="595" y="454" text-anchor="middle">one DB per service</text>
-
-  <!-- Arrows: services to prom -->
-  <path class="arrow" d="M 100 90 L 165 140" marker-end="url(#ah)"/>
-  <path class="arrow" d="M 280 90 L 215 140" marker-end="url(#ah)"/>
-  <!-- prom to grafana -->
-  <path class="arrow" d="M 160 200 L 110 250" marker-end="url(#ah)"/>
-  <!-- prom to prom2chronos -->
-  <path class="arrow" d="M 220 200 L 290 250" marker-end="url(#ah)"/>
-  <!-- prom2chronos to chronos -->
-  <path class="arrow-bright" d="M 400 280 C 540 240, 600 130, 670 90" marker-end="url(#ahb)"/>
-
-  <!-- Olymp to layers -->
-  <path class="arrow-bright" d="M 540 280 C 480 240, 470 220, 510 200" marker-end="url(#ahb)"/>
-  <path class="arrow-bright" d="M 580 280 C 580 240, 580 220, 510 90" marker-end="url(#ahb)"/>
-  <path class="arrow-bright" d="M 620 280 C 660 240, 660 220, 680 200" marker-end="url(#ahb)"/>
-  <path class="arrow-bright" d="M 650 280 C 700 240, 700 130, 700 90" marker-end="url(#ahb)"/>
-  <!-- Olymp to postgres -->
-  <path class="arrow" d="M 595 360 L 595 410" marker-end="url(#ah)"/>
-
-  <!-- Layer to postgres -->
-  <path class="arrow" d="M 510 200 C 510 360, 540 410, 560 410" marker-end="url(#ah)"/>
-  <path class="arrow" d="M 680 200 C 680 360, 660 410, 640 410" marker-end="url(#ah)"/>
+  <!-- Legend -->
+  <line class="arrow-data" x1="20" y1="430" x2="60" y2="430" marker-end="url(#ad)"/>
+  <text class="legend-text" x="70" y="434">data plane (HTTP, scrape, ingest)</text>
+  <line class="arrow-control" x1="320" y1="430" x2="360" y2="430" marker-end="url(#ac)"/>
+  <text class="legend-text" x="370" y="434">control plane (Olymp port calls)</text>
 </svg>
   </div>
 </section>
 
-<section id="run">
-  <h2>Run it</h2>
-  <h3>One script. Five minutes.</h3>
-  <p>Requires Docker (with Compose v2), <code>jq</code>, and <code>curl</code>. Configured via <code>deploy/.env</code>.</p>
+<section id="run" aria-labelledby="run-heading">
+  <p class="kicker">Run it</p>
+  <h2 id="run-heading">One script. Five minutes from clone to first run.</h2>
+  <p>Requires Docker (with Compose v2), <code>jq</code>, and <code>curl</code>.</p>
   <pre><code>git clone https://github.com/felixgeelhaar/olymp.git
 cd olymp
 ./deploy/demo-full.sh</code></pre>
 
-  <p>What the script does:</p>
-  <ol>
-    <li>Builds a local <code>olymp:demo</code> image.</li>
-    <li>Boots the cognitive stack, the two broken sample services, Prometheus 2.55, Grafana 11.3, and the <code>prom2chronos</code> bridge.</li>
-    <li>Waits for <code>/healthz</code>, then seeds Mnemos with three baseline claims.</li>
+  <p>What the script does, in order:</p>
+  <ol class="steps">
+    <li>Builds a local <code>olymp:demo</code> image carrying the seed-demo subcommand.</li>
+    <li>Boots the cognitive stack, the two broken sample services, Prometheus 2.55, Grafana 11.3, and the prom2chronos bridge.</li>
+    <li>Waits for <code>/healthz</code>, then seeds memory with three baseline claims.</li>
     <li>Submits one <code>explain</code> and one <code>remediate</code> run, prints the provenance chain.</li>
   </ol>
 
   <p>While it's running, open:</p>
   <div class="cols">
     <div class="card">
-      <h4>localhost:3000</h4>
+      <h3>localhost:3000</h3>
       <p>Grafana — anonymous viewer enabled. The <strong>Olymp Demo — Broken Services</strong> dashboard refreshes every 5s.</p>
     </div>
     <div class="card">
-      <h4>localhost:9090</h4>
+      <h3>localhost:9090</h3>
       <p>Prometheus UI. Try <code>payments_requests_total</code> or <code>histogram_quantile(0.99, …)</code>.</p>
     </div>
     <div class="card">
-      <h4>localhost:8080/v1/runs/stream</h4>
-      <p>SSE feed of every Olymp run state change — connect from a terminal with <code>curl -N</code>.</p>
+      <h3>localhost:8080/v1/runs/stream</h3>
+      <p>SSE feed of every run state change — <code>curl -N</code> from a terminal.</p>
     </div>
   </div>
 
-  <div class="callout">
-    <strong>Note.</strong> Chronos's pattern detection runs against the
-    observations <code>prom2chronos</code> posts; signals appear once
-    enough datapoints accumulate (typically a couple of minutes after
-    the bridge starts). The Olymp loop keeps running on the
-    observations themselves in the meantime.
-  </div>
-
-  <h3 style="margin-top: 48px;">Tear down</h3>
+  <h3 class="subhead">Tear down</h3>
   <pre><code>docker compose -f deploy/docker-compose.yml --env-file deploy/.env --profile demo down -v</code></pre>
 </section>
 
-<section>
-  <h2>The cognitive stack <span class="tag">all four open-source</span></h2>
-  <h3>Olymp's job is to drive the loop. The intelligence lives below.</h3>
+<section id="stack" aria-labelledby="stack-heading">
+  <p class="kicker">The cognitive stack</p>
+  <h2 id="stack-heading">Olymp's job is to drive the loop. The intelligence lives below.</h2>
+  <p>
+    Each layer is a separately-deployable open-source service. Use them
+    standalone or wire all four through Olymp. The layer names are
+    deliberate; the four-system split lets each evolve on its own
+    cadence without dragging the others.
+  </p>
   <div class="cols">
     <div class="card">
-      <h4><a href="https://github.com/felixgeelhaar/mnemos">Mnemos</a></h4>
-      <p><strong>Memory.</strong> Local-first evidence layer. Extracts structured claims from text, detects contradictions, returns query answers with full evidence traceability.</p>
+      <h3><a href="https://github.com/felixgeelhaar/mnemos">Mnemos · memory</a></h3>
+      <p>Local-first evidence layer. Extracts structured claims from text, detects contradictions, returns query answers with full evidence traceability.</p>
     </div>
     <div class="card">
-      <h4><a href="https://github.com/felixgeelhaar/chronos">Chronos</a></h4>
-      <p><strong>Time.</strong> Pattern detection over time-series data. Ingests observations, derives spike / drift / seasonality signals.</p>
+      <h3><a href="https://github.com/felixgeelhaar/chronos">Chronos · time</a></h3>
+      <p>Pattern detection over time-series data. Ingests observations, derives spike / drift / seasonality signals.</p>
     </div>
     <div class="card">
-      <h4><a href="https://github.com/felixgeelhaar/nous">Nous</a></h4>
-      <p><strong>Decisions.</strong> Commitment extraction, risk evaluation, intervention generation. Audit-grade decision trail.</p>
+      <h3><a href="https://github.com/felixgeelhaar/nous">Nous · decisions</a></h3>
+      <p>Commitment extraction, risk evaluation, intervention generation. Audit-grade decision trail. Bring your own LLM.</p>
     </div>
     <div class="card">
-      <h4><a href="https://github.com/felixgeelhaar/praxis">Praxis</a></h4>
-      <p><strong>Execution.</strong> Three verbs (<code>ListCapabilities</code>, <code>Execute</code>, <code>DryRun</code>). Idempotency, policy gating, replay-from-audit.</p>
+      <h3><a href="https://github.com/felixgeelhaar/praxis">Praxis · execution</a></h3>
+      <p>Three verbs (<code>ListCapabilities</code>, <code>Execute</code>, <code>DryRun</code>). Idempotency, policy gating, replay-from-audit.</p>
     </div>
   </div>
 </section>
 
-</div>
+</main>
 
 <footer>
-  <div class="wrap">
-    <span>Olymp is open source, MIT licensed.</span>
-    <span>
-      <a href="https://github.com/felixgeelhaar/olymp">github.com/felixgeelhaar/olymp</a>
-    </span>
+  <div class="wrap footer-grid">
+    <div>
+      <div class="logo">olymp<span aria-hidden="true">.</span></div>
+      <p class="dim">MIT licensed · single Go binary · zero hosted dependencies.</p>
+    </div>
+    <div>
+      <h4>Project</h4>
+      <ul>
+        <li><a href="https://github.com/felixgeelhaar/olymp">GitHub repo</a></li>
+        <li><a href="https://github.com/felixgeelhaar/olymp/blob/main/Roadmap.md">Roadmap</a></li>
+        <li><a href="https://github.com/felixgeelhaar/olymp/blob/main/PRD.md">PRD</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Stack</h4>
+      <ul>
+        <li><a href="https://github.com/felixgeelhaar/mnemos">Mnemos</a></li>
+        <li><a href="https://github.com/felixgeelhaar/chronos">Chronos</a></li>
+        <li><a href="https://github.com/felixgeelhaar/nous">Nous</a></li>
+        <li><a href="https://github.com/felixgeelhaar/praxis">Praxis</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="https://github.com/felixgeelhaar/olymp/discussions">Discussions</a></li>
+        <li><a href="https://github.com/felixgeelhaar/olymp/issues">Issues</a></li>
+        <li><a href="mailto:felix.geelhaar@gmail.com">Design partners →</a></li>
+      </ul>
+    </div>
   </div>
 </footer>
 
