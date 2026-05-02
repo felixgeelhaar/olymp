@@ -51,10 +51,11 @@ jobs:
           go-version: "1.26.x"
           check-latest: true
           cache: true
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v7
         with:
-          # v1.62 is built against Go 1.23 — fails to load on Go 1.26 modules.
-          # v2.1 is built against Go 1.26 and supports the same lint matrix.
+          # v6 of the action doesn't accept golangci-lint v2.x. v1.62 of
+          # the linter itself is built against Go 1.23 and fails to load
+          # Go 1.26 modules. Pair: action v7 + linter v2.1.
           version: v2.1.0
           args: --timeout=5m
 
