@@ -8,6 +8,11 @@ on:
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
+env:
+  # Opt the Node-20 actions in this workflow into Node 24. Removes the
+  # deprecation banner and future-proofs against the 2026-09-16 cutoff.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 permissions:
   contents: read
   pages: write
