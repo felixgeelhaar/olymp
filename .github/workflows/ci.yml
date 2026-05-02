@@ -53,7 +53,9 @@ jobs:
           cache: true
       - uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.62.0
+          # v1.62 is built against Go 1.23 — fails to load on Go 1.26 modules.
+          # v2.1 is built against Go 1.26 and supports the same lint matrix.
+          version: v2.1.0
           args: --timeout=5m
 
   postgres-integration:
