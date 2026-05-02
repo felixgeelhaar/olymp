@@ -3,11 +3,14 @@ module github.com/felixgeelhaar/olymp
 go 1.26.2
 
 require (
+	github.com/felixgeelhaar/agent-go v0.8.0
+	github.com/felixgeelhaar/axi-go v1.2.0
 	github.com/felixgeelhaar/bolt v1.3.0
 	github.com/felixgeelhaar/fortify v1.2.1
 	github.com/felixgeelhaar/mcp-go v1.9.0
 	github.com/felixgeelhaar/statekit v1.3.2
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/lib/pq v1.12.3
 	modernc.org/sqlite v1.50.0
 )
@@ -15,14 +18,11 @@ require (
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/felixgeelhaar/agent-go v0.8.0 // indirect
-	github.com/felixgeelhaar/axi-go v1.2.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.9.2 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
