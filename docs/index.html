@@ -40,14 +40,13 @@
   <div class="cta-row">
     <a class="cta primary" href="#run">Run the demo</a>
     <a class="cta" href="https://github.com/felixgeelhaar/olymp" aria-label="View Olymp on GitHub">★ on GitHub</a>
-    <a class="cta ghost" href="#scenario">See the scenario ↓</a>
+    <a class="cta ghost" href="#scenario">See it work ↓</a>
   </div>
-  <ul class="badges" aria-label="At a glance">
-    <li>MIT licensed</li>
-    <li>Go · single binary</li>
-    <li>HTTP · MCP · CLI</li>
-    <li>Postgres · SQLite · in-memory</li>
-  </ul>
+  <div class="use-cases">
+    <div><p><strong>Auto-remediate from alerts</strong>Your services degrade — Olymp pulls the signal, decides, fires the rollback, and writes the postmortem.</p></div>
+    <div><p><strong>Replay a 2am incident</strong>The chain that paged you also reproduces the decision, weeks later, against the same inputs.</p></div>
+    <div><p><strong>"What would the agent have done?"</strong>Run a recorded chain through a new policy without re-firing side effects.</p></div>
+  </div>
 </section>
 
 <section id="scenario" aria-labelledby="scenario-heading">
@@ -192,16 +191,6 @@
     </div>
   </div>
 
-  <h3 class="subhead">Replay-from-audit</h3>
-  <p>
-    Every run's provenance is enough to <em>re-execute</em> the loop —
-    same inputs, same decisions — without hitting any layer's
-    side-effecting endpoints. A regression in the decision layer
-    surfaces as a delta against the recorded chain. This is the
-    feature that pays for an orchestration runtime; the demo's
-    timeline output is one half of it, the replay tooling is the
-    other.
-  </p>
 </section>
 
 <section id="architecture" aria-labelledby="arch-heading">
