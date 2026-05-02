@@ -73,10 +73,13 @@ func cmdServe(args []string) error {
 			return &OlympError{Code: "auth", Message: "build mnemos token source: " + err.Error(), Cause: err}
 		}
 		layers = ports.Layers{
-			Mnemos:  mnemos.New(httpx.Config{BaseURL: *mnemosURL, TokenSource: mnemosTokenSrc}),
-			Chronos: chronos.New(httpx.Config{BaseURL: *chronosURL}),
-			Nous:    nous.New(httpx.Config{BaseURL: *nousURL}),
-			Praxis:  praxis.New(httpx.Config{BaseURL: *praxisURL}),
+			Mnemos: mnemos.New(httpx.Config{BaseURL: *mnemosURL, TokenSource: mnemosTokenSrc}),
+			Chronos: chronos.NewWithConfig(chronos.Config{
+				HTTP:           httpx.Config{BaseURL: *chronosURL},
+				DefaultScopeID: os.Getenv("OLYMP_CHRONOS_DEFAULT_SCOPE_ID"),
+			}),
+			Nous:   nous.New(httpx.Config{BaseURL: *nousURL}),
+			Praxis: praxis.New(httpx.Config{BaseURL: *praxisURL}),
 		}
 	}
 
