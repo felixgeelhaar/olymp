@@ -29,9 +29,25 @@ if [ ! -f "${ENV_FILE}" ]; then
   echo "→ wrote ${ENV_FILE} from template"
 fi
 
-echo "→ build the local olymp image (carries the seed-demo subcommand + adapter fixes)"
+echo "→ build local olymp image (seed-demo + adapter fixes)"
 docker build -q -t ghcr.io/felixgeelhaar/olymp:demo "${ROOT}" >/dev/null
 export OLYMP_TAG=demo
+
+# Praxis 0.1.0 didn't persist its capability registry to Postgres, so
+# the FK from `actions.capability` rejected every Execute on a cold-
+# start postgres deployment. The fix lives on `praxis@main` (Registry
+# now upserts via the configured CapabilityRepo); use a locally-built
+# image until that lands in a tagged release.
+PRAXIS_REPO="${PRAXIS_REPO:-${ROOT}/../praxis}"
+if [ -d "${PRAXIS_REPO}" ]; then
+  echo "→ build local praxis image with capability persistence fix"
+  # Praxis's default Dockerfile expects a goreleaser-prebuilt binary
+  # in the build context. Dockerfile.dev compiles from source.
+  docker build -q -f "${PRAXIS_REPO}/Dockerfile.dev" -t ghcr.io/felixgeelhaar/praxis:demo "${PRAXIS_REPO}" >/dev/null
+  export PRAXIS_TAG=demo
+else
+  echo "warning: praxis sibling repo not found at ${PRAXIS_REPO}; using tagged image (Praxis Execute may 500 until v0.2 ships)"
+fi
 
 echo "→ bring up cognitive stack + demo services (this may take a minute)"
 ${COMPOSE} --profile demo up -d --build
@@ -55,6 +71,7 @@ done
 echo "→ wait for prometheus to scrape the broken services"
 PROM_PAYMENTS='up%7Bjob%3D%22flaky-payments%22%7D'
 PROM_CHECKOUT='up%7Bjob%3D%22slow-checkout%22%7D'
+PROM_PAYMENTS_ERR='sum(rate(payments_requests_total%7Bstatus%3D%22error%22%7D%5B1m%5D))%20%2F%20clamp_min(sum(rate(payments_requests_total%5B1m%5D))%2C%200.001)'
 for i in $(seq 1 30); do
   payments=$(curl -fsS "http://localhost:9090/api/v1/query?query=${PROM_PAYMENTS}" \
     | jq -r '.data.result[0].value[1] // "0"')
@@ -70,16 +87,17 @@ done
 echo "→ seed mnemos with operational claims"
 ${COMPOSE} exec -T olymp /app/olymp seed-demo
 
-echo "→ wait for prom2chronos to land at least one signal in chronos"
-SCOPE_ID="$(grep ^DEMO_CHRONOS_SCOPE_ID "${ENV_FILE}" | cut -d= -f2)"
-for i in $(seq 1 30); do
-  count=$(curl -fsS "http://localhost:7778/v1/signals?scope_id=${SCOPE_ID}" | jq -r '.count // 0')
-  if [ "$count" -gt 0 ] 2>/dev/null; then
-    echo "  chronos has ${count} signals for scope ${SCOPE_ID}"
-    break
-  fi
-  sleep 2
+
+echo "→ let the broken services degrade for ~80s so the incident is real"
+for i in $(seq 1 8); do
+  sleep 10
+  err=$(curl -fsS "http://localhost:9090/api/v1/query?query=${PROM_PAYMENTS_ERR}" \
+    | jq -r '.data.result[0].value[1] // "0"')
+  pct=$(awk "BEGIN { print ${err:-0} * 100 }")
+  echo "  t+${i}0s payments error rate = $(printf %.2f "$pct")%"
 done
+
+SCOPE_ID="$(grep ^DEMO_CHRONOS_SCOPE_ID "${ENV_FILE}" | cut -d= -f2)"
 
 echo
 echo "──────────────────────────────────────────────────────────────"
@@ -100,6 +118,12 @@ echo "$EXPLAIN" | jq '{id, status, intent: .intent.type}'
 EXPLAIN_ID=$(echo "$EXPLAIN" | jq -r .id)
 
 echo
+echo "→ baseline payments error rate before remediate"
+ERR_BEFORE=$(curl -fsS "http://localhost:9090/api/v1/query?query=${PROM_PAYMENTS_ERR}" \
+  | jq -r '.data.result[0].value[1] // "0"')
+printf "  %.2f%%\n" "$(awk "BEGIN { print ${ERR_BEFORE:-0} * 100 }")"
+
+echo
 echo "→ submit remediate payments-latency"
 REM=$(curl -fsS -X POST "${BASE}/v1/runs" \
   -H "Content-Type: application/json" \
@@ -109,6 +133,44 @@ REM=$(curl -fsS -X POST "${BASE}/v1/runs" \
 echo "$REM" | jq '{id, status, intent: .intent.type}'
 REM_ID=$(echo "$REM" | jq -r .id)
 
+# Remediate gates on approval: poll until awaiting_approval, then
+# approve via /v1/runs/{id}/steer, then poll until completed.
+echo
+echo -n "→ wait for awaiting_approval"
+for i in $(seq 1 30); do
+  STATUS=$(curl -fsS "${BASE}/v1/runs/${REM_ID}" | jq -r '.run.status')
+  if [ "$STATUS" = "awaiting_approval" ]; then
+    echo " ok"
+    break
+  fi
+  if [ "$STATUS" = "completed" ] || [ "$STATUS" = "failed" ]; then
+    echo " (already $STATUS)"
+    break
+  fi
+  echo -n "."
+  sleep 1
+done
+
+if [ "$STATUS" = "awaiting_approval" ]; then
+  echo "→ approve the proposed action"
+  curl -fsS -X POST "${BASE}/v1/runs/${REM_ID}/steer" \
+    -H "Content-Type: application/json" \
+    -H "X-Olymp-Caller-Type: user" \
+    -H "X-Olymp-Caller-Id: demo" \
+    -d '{"kind":"approve","reason":"demo-auto-approve"}'
+
+  echo -n "→ wait for run to complete"
+  for i in $(seq 1 30); do
+    STATUS=$(curl -fsS "${BASE}/v1/runs/${REM_ID}" | jq -r '.run.status')
+    if [ "$STATUS" = "completed" ] || [ "$STATUS" = "failed" ]; then
+      echo " $STATUS"
+      break
+    fi
+    echo -n "."
+    sleep 1
+  done
+fi
+
 echo
 echo "→ inspect remediate run — provenance chain"
 curl -fsS "${BASE}/v1/runs/${REM_ID}" | jq '{
@@ -117,8 +179,23 @@ curl -fsS "${BASE}/v1/runs/${REM_ID}" | jq '{
   subject: .run.intent.subject,
   status: .run.status,
   iterations: .run.iteration,
-  timeline: [.timeline[] | {iteration, stage, layer: .layer_ref.layer, layer_ref: .layer_ref.id}]
+  timeline: [.timeline[] | {iteration, stage, layer: .layer_ref.layer, layer_ref: .layer_ref.id, outputs: .outputs}]
 }'
+
+echo
+echo "→ wait for prometheus to record the recovery (~30s)"
+for i in $(seq 1 12); do
+  ERR_AFTER=$(curl -fsS "http://localhost:9090/api/v1/query?query=${PROM_PAYMENTS_ERR}" \
+    | jq -r '.data.result[0].value[1] // "1"')
+  AFTER_PCT=$(awk "BEGIN { print ${ERR_AFTER:-1} * 100 }")
+  echo "  t+${i}0s payments error rate = $(printf %.2f "$AFTER_PCT")%"
+  # Healthy baseline is ~2%; consider <5% recovered.
+  if awk "BEGIN { exit !(${ERR_AFTER:-1} < 0.05) }"; then
+    echo "  → recovered."
+    break
+  fi
+  sleep 10
+done
 
 echo
 echo "Done. Try:"

@@ -44,6 +44,7 @@ services:
       # write paths to /v1/* succeed. Override via .env in production.
       MNEMOS_JWT_SECRET: ${STACK_JWT_SECRET_HEX:?STACK_JWT_SECRET_HEX must be set}
     command: ["serve"]
+    restart: on-failure:5
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,6 +63,7 @@ services:
       CHRONOS_HTTP_PORT: "7778"
       CHRONOS_DB_TYPE: postgres
       CHRONOS_DB_CONN: postgres://olymp:olymp@postgres:5432/chronos?sslmode=disable
+    restart: on-failure:5
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,6 +81,7 @@ services:
       NOUS_MNEMOS_URL: http://mnemos:7777
       NOUS_CHRONOS_URL: http://chronos:7778
       NOUS_PRAXIS_ADDR: http://praxis:8080
+    restart: on-failure:5
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,6 +104,7 @@ services:
       PRAXIS_DB_TYPE: postgres
       PRAXIS_DB_CONN: postgres://olymp:olymp@postgres:5432/praxis?sslmode=disable
       PRAXIS_MNEMOS_URL: http://mnemos:7777/v1/events
+    restart: on-failure:5
     depends_on:
       postgres:
         condition: service_healthy
@@ -129,7 +133,15 @@ services:
       # Demo scope shared with prom2chronos. Olymp queries Chronos
       # signals scoped here when the loop's SignalQuery has no scope.
       OLYMP_CHRONOS_DEFAULT_SCOPE_ID: ${DEMO_CHRONOS_SCOPE_ID:-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}
+      # Subject → action playbook. Olymp's nous adapter reads this and
+      # injects the matching actions into every Decide response so
+      # Praxis has something concrete to execute. Production: swap
+      # for a file your runbook generates.
+      OLYMP_NOUS_PLAYBOOK_FILE: /etc/olymp/playbook.json
+    volumes:
+      - ./playbook.json:/etc/olymp/playbook.json:ro
     command: ["serve", "--addr", ":8080"]
+    restart: on-failure:5
     depends_on:
       postgres:
         condition: service_healthy

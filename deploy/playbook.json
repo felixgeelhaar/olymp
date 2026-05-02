@@ -1,0 +1,26 @@
+[
+  {
+    "match": "payments-latency",
+    "actions": [
+      {
+        "capability": "http_request",
+        "payload": {
+          "method": "POST",
+          "url": "http://flaky-payments:9101/admin/heal"
+        }
+      }
+    ]
+  },
+  {
+    "match": "checkout-latency",
+    "actions": [
+      {
+        "capability": "http_request",
+        "payload": {
+          "method": "POST",
+          "url": "http://slow-checkout:9102/admin/heal"
+        }
+      }
+    ]
+  }
+]

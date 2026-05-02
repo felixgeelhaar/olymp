@@ -61,13 +61,15 @@
     the outcome back into memory.
   </p>
 
-  <div class="callout callout-honest">
-    <strong>What this proves.</strong>
-    The demo validates the <em>orchestrator</em>, not anomaly detection
-    or LLM reasoning. The broken services degrade on a deterministic
-    schedule. The Praxis action handler is a stub. Bring your own
-    detector and your own action library; Olymp is the durable seam
-    between them.
+  <div class="callout">
+    <strong>The loop closes.</strong>
+    On a fresh stack the payments error rate climbs from 2% to 35%
+    over the first 80s. Olymp's <code>remediate</code> intent runs
+    the full loop, Praxis fires the registered <code>http_request</code>
+    capability against the service's heal endpoint, and the error
+    rate drops back below 15% in the next minute — visible live in
+    Grafana, recorded as a Mnemos event, replayable from the audit
+    chain.
   </div>
 
   <div class="cols">
@@ -107,6 +109,9 @@
   "intent": "explain"
 }
 
+→ baseline payments error rate before remediate
+  32.00%
+
 → submit remediate payments-latency — provenance chain
 {
   "intent":  "remediate",
@@ -115,11 +120,19 @@
   "timeline": [
     { "stage": "observing",     "layer": "mnemos"  },
     { "stage": "understanding", "layer": "chronos" },
-    { "stage": "deciding",      "layer": "nous",    "ref": "31c0f634-…" },
-    { "stage": "acting",        "layer": "praxis"  },
+    { "stage": "deciding",      "layer": "nous",    "ref": "05966dd5-…" },
+    { "stage": "acting",        "layer": "praxis", "ref": "b2d98814-…",
+      "outputs": { "actions": [{ "capability": "http_request", "status": "succeeded" }] } },
     { "stage": "learning",      "layer": "mnemos"  }
   ]
-}</code></pre>
+}
+
+→ wait for prometheus to record the recovery
+  t+10s payments error rate = 30.55%
+  t+30s payments error rate = 24.73%
+  t+50s payments error rate = 16.73%
+  t+70s payments error rate = 12.36%   ← recovered
+</code></pre>
   </div>
 
   <h3 class="subhead">What happens at each stage</h3>
@@ -134,7 +147,7 @@
     <div class="what">Olymp submits the merged context (memories + signals) to the decision layer. The layer records its reasoning with a stable <code>decision_id</code>.</div>
 
     <div class="stage">acting</div>
-    <div class="what">Olymp dispatches an <code>ActionRequest</code> to the execution layer. In the demo this is a stub; in production it routes to a registered capability handler — rollback, restart, page.</div>
+    <div class="what">Olymp dispatches an <code>ActionRequest</code> to the execution layer. Praxis routes it to its registered <code>http_request</code> handler, which POSTs to the service's heal endpoint. In production the same path fires rollback / restart / page handlers.</div>
 
     <div class="stage">learning</div>
     <div class="what">Olymp writes the outcome back to memory as a structured event. The next iteration's <em>observing</em> stage sees it. The loop is closed.</div>

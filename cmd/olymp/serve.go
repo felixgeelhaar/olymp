@@ -72,13 +72,20 @@ func cmdServe(args []string) error {
 		if err != nil {
 			return &OlympError{Code: "auth", Message: "build mnemos token source: " + err.Error(), Cause: err}
 		}
+		playbook, err := loadNousPlaybook()
+		if err != nil {
+			return &OlympError{Code: "playbook", Message: err.Error(), Cause: err}
+		}
 		layers = ports.Layers{
 			Mnemos: mnemos.New(httpx.Config{BaseURL: *mnemosURL, TokenSource: mnemosTokenSrc}),
 			Chronos: chronos.NewWithConfig(chronos.Config{
 				HTTP:           httpx.Config{BaseURL: *chronosURL},
 				DefaultScopeID: os.Getenv("OLYMP_CHRONOS_DEFAULT_SCOPE_ID"),
 			}),
-			Nous:   nous.New(httpx.Config{BaseURL: *nousURL}),
+			Nous: nous.NewWithConfig(nous.Config{
+				HTTP:     httpx.Config{BaseURL: *nousURL},
+				Playbook: playbook,
+			}),
 			Praxis: praxis.New(httpx.Config{BaseURL: *praxisURL}),
 		}
 	}
@@ -123,6 +130,25 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// loadNousPlaybook reads OLYMP_NOUS_PLAYBOOK_FILE if set and returns
+// the parsed entries. Empty path → no playbook (Decide returns
+// whatever Nous's extractor produces, no actions injected).
+func loadNousPlaybook() ([]nous.PlaybookEntry, error) {
+	path := os.Getenv("OLYMP_NOUS_PLAYBOOK_FILE")
+	if path == "" {
+		return nil, nil
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read playbook: %w", err)
+	}
+	var out []nous.PlaybookEntry
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("parse playbook: %w", err)
+	}
+	return out, nil
 }
 
 // buildMnemosTokenSource wires the rotating-JWT issuer for outbound

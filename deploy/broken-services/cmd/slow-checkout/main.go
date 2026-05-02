@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -29,11 +30,12 @@ var (
 	})
 )
 
-// baseLatency drifts upward over time. After ~5 minutes the p99 is
-// well past any reasonable SLO.
+// baseLatency drifts upward over time. After ~90s of uptime the p99
+// is well past any reasonable SLO. /admin/heal shifts `start`
+// forward to drop the curve back to baseline.
 func baseLatency(start time.Time) time.Duration {
-	mins := time.Since(start).Minutes()
-	base := 80 + 60*mins // ms
+	secs := time.Since(start).Seconds()
+	base := 80.0 + 18.0*secs // ms — 80→1700ms over 90s
 	if base > 2500 {
 		base = 2500
 	}
@@ -43,11 +45,24 @@ func baseLatency(start time.Time) time.Duration {
 func main() {
 	addr := envOr("ADDR", ":9102")
 	rps := envInt("RPS", 5)
-	start := time.Now()
+	var (
+		start = time.Now()
+		mu    sync.RWMutex
+	)
+	getStart := func() time.Time {
+		mu.RLock()
+		defer mu.RUnlock()
+		return start
+	}
+	heal := func() {
+		mu.Lock()
+		start = time.Now()
+		mu.Unlock()
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/checkout", func(w http.ResponseWriter, r *http.Request) {
-		base := baseLatency(start)
+		base := baseLatency(getStart())
 		jitter := time.Duration(rand.Intn(int(base / 4)))
 		dur := base + jitter
 		time.Sleep(dur)
@@ -58,6 +73,14 @@ func main() {
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintln(w, "ok")
+	})
+	// /admin/heal models the rollback / restart that returns the
+	// service to its healthy latency baseline. Praxis fires this in
+	// the demo's acting stage.
+	mux.HandleFunc("/admin/heal", func(w http.ResponseWriter, _ *http.Request) {
+		heal()
+		log.Println("slow-checkout: healed (latency drift reset)")
+		fmt.Fprintln(w, `{"status":"healed"}`)
 	})
 
 	go func() {

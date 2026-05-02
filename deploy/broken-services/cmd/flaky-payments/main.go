@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,30 +38,44 @@ var (
 )
 
 // errorRate is the fraction of requests that fail. Climbs from a
-// healthy baseline to a misbehaving one to make the dashboard
-// visibly degrade over time.
+// healthy baseline to a misbehaving one. /admin/heal shifts `start`
+// forward so the curve drops back to healthy — that's how Olymp's
+// remediate loop resolves the demo incident.
 func errorRate(start time.Time) float64 {
-	mins := time.Since(start).Minutes()
+	secs := time.Since(start).Seconds()
 	switch {
-	case mins < 1:
+	case secs < 30:
 		return 0.02 // healthy
-	case mins < 3:
-		return 0.15 // warning
+	case secs < 60:
+		return 0.20 // warning
 	default:
-		return 0.40 // broken
+		return 0.45 // broken
 	}
 }
 
 func main() {
 	addr := envOr("ADDR", ":9101")
 	rps := envInt("RPS", 5)
-	start := time.Now()
+	var (
+		start = time.Now()
+		mu    sync.RWMutex
+	)
+	getStart := func() time.Time {
+		mu.RLock()
+		defer mu.RUnlock()
+		return start
+	}
+	heal := func() {
+		mu.Lock()
+		start = time.Now()
+		mu.Unlock()
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/pay", func(w http.ResponseWriter, r *http.Request) {
 		dur := time.Duration(20+rand.Intn(80)) * time.Millisecond
 		time.Sleep(dur)
-		if rand.Float64() < errorRate(start) {
+		if rand.Float64() < errorRate(getStart()) {
 			requests.WithLabelValues("error").Inc()
 			latency.WithLabelValues("error").Observe(dur.Seconds())
 			http.Error(w, "payment failed", http.StatusInternalServerError)
@@ -73,6 +88,16 @@ func main() {
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintln(w, "ok")
+	})
+	// /admin/heal models a recovery action: rolling back the bad
+	// deploy, restarting the leaky pod, whatever the runbook says.
+	// Praxis fires this in the demo's acting stage; the error rate
+	// drops back to the healthy baseline immediately and Grafana
+	// shows the curve recover.
+	mux.HandleFunc("/admin/heal", func(w http.ResponseWriter, _ *http.Request) {
+		heal()
+		log.Println("flaky-payments: healed (error rate reset)")
+		fmt.Fprintln(w, `{"status":"healed"}`)
 	})
 
 	// Background load generator so metrics tick over without external clients.

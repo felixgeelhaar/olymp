@@ -16,21 +16,52 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/felixgeelhaar/olymp/internal/adapters/httpx"
 	"github.com/felixgeelhaar/olymp/internal/domain"
 	"github.com/felixgeelhaar/olymp/internal/ports"
 )
 
+// PlaybookEntry maps a Goal description (or subject substring) to the
+// concrete actions Olymp should hand to Praxis. Used for deployments
+// where Nous itself doesn't yet emit action specs and the operator
+// wants a deterministic remediation library.
+type PlaybookEntry struct {
+	// Match is a case-insensitive substring tested against the
+	// Goal.Description. First match wins.
+	Match string
+	// Actions to attach to the resulting DecisionRef.
+	Actions []domain.ActionRequest
+}
+
+// Config carries Nous-specific options on top of httpx.Config.
+type Config struct {
+	HTTP     httpx.Config
+	Playbook []PlaybookEntry
+}
+
 // Client implements ports.NousPort over HTTP+JSON.
 type Client struct {
-	hc *httpx.Client
+	hc       *httpx.Client
+	playbook []PlaybookEntry
 }
 
 // New returns a Nous HTTP client.
 func New(cfg httpx.Config) *Client { return &Client{hc: httpx.New(cfg)} }
 
+// NewWithConfig returns a Nous client with optional playbook actions
+// merged into every Decide response.
+func NewWithConfig(cfg Config) *Client {
+	return &Client{hc: httpx.New(cfg.HTTP), playbook: append([]PlaybookEntry(nil), cfg.Playbook...)}
+}
+
 // Decide submits the loop's context to Nous's commitment extractor
-// and projects the result as a DecisionRef.
+// and projects the result as a DecisionRef. When a Playbook is
+// configured, matching entries contribute concrete Actions so the
+// loop has something for Praxis to execute even when Nous's
+// extractor returns no commitments — useful for production
+// deployments where the runbook is more deterministic than the LLM.
 func (c *Client) Decide(ctx context.Context, in domain.DecisionRequest) (domain.DecisionRef, error) {
 	owner := decideOwner(in)
 	body := extractRequest{
@@ -51,7 +82,39 @@ func (c *Client) Decide(ctx context.Context, in domain.DecisionRequest) (domain.
 		// has something to point at.
 		id = "olymp-noop:" + in.RunID
 	}
-	return domain.DecisionRef{ID: id}, nil
+	return domain.DecisionRef{
+		ID:      id,
+		Actions: playbookActions(c.playbook, in),
+	}, nil
+}
+
+// playbookActions returns the actions whose Match substring appears
+// (case-insensitively) anywhere in the goal description. Each
+// returned action is freshly stamped with a uuid to keep idempotency
+// keys distinct across runs.
+func playbookActions(entries []PlaybookEntry, in domain.DecisionRequest) []domain.ActionRequest {
+	if len(entries) == 0 {
+		return nil
+	}
+	desc := strings.ToLower(in.Goal.Description)
+	for _, p := range entries {
+		if p.Match == "" {
+			continue
+		}
+		if !strings.Contains(desc, strings.ToLower(p.Match)) {
+			continue
+		}
+		out := make([]domain.ActionRequest, 0, len(p.Actions))
+		for _, a := range p.Actions {
+			a.ID = uuid.NewString()
+			if a.IdempotencyKey == "" {
+				a.IdempotencyKey = a.ID
+			}
+			out = append(out, a)
+		}
+		return out
+	}
+	return nil
 }
 
 // Get fetches a recorded decision by ID.
