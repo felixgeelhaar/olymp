@@ -43,6 +43,8 @@ func run(args []string) error {
 		return cmdHalt(args[1:])
 	case "mcp":
 		return cmdMCP(args[1:])
+	case "seed-demo":
+		return cmdSeedDemo(args[1:])
 	case "help", "--help", "-h":
 		return printUsage()
 	default:

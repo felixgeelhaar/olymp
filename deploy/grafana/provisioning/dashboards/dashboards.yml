@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: olymp-demo
+    orgId: 1
+    folder: Olymp Demo
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

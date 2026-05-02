@@ -126,6 +126,9 @@ services:
       # Same HMAC secret as Mnemos. Olymp self-mints a 24-h agent JWT,
       # rotates it ahead of expiry, and attaches it to every Mnemos call.
       OLYMP_AUTH_SECRET_HEX: ${STACK_JWT_SECRET_HEX:?STACK_JWT_SECRET_HEX must be set}
+      # Demo scope shared with prom2chronos. Olymp queries Chronos
+      # signals scoped here when the loop's SignalQuery has no scope.
+      OLYMP_CHRONOS_DEFAULT_SCOPE_ID: ${DEMO_CHRONOS_SCOPE_ID:-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}
     command: ["serve", "--addr", ":8080"]
     depends_on:
       postgres:
@@ -141,5 +144,80 @@ services:
     ports:
       - "8080:8080"
 
+  # --- Demo: broken services + Prometheus + Grafana + bridge ---
+
+  flaky-payments:
+    profiles: ["demo"]
+    build:
+      context: ./broken-services
+      args:
+        SERVICE: flaky-payments
+    environment:
+      ADDR: ":9101"
+      RPS: "5"
+    ports:
+      - "9101:9101"
+
+  slow-checkout:
+    profiles: ["demo"]
+    build:
+      context: ./broken-services
+      args:
+        SERVICE: slow-checkout
+    environment:
+      ADDR: ":9102"
+      RPS: "5"
+    ports:
+      - "9102:9102"
+
+  prometheus:
+    profiles: ["demo"]
+    image: prom/prometheus:v2.55.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      flaky-payments:
+        condition: service_started
+      slow-checkout:
+        condition: service_started
+
+  grafana:
+    profiles: ["demo"]
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      prometheus:
+        condition: service_started
+
+  prom2chronos:
+    profiles: ["demo"]
+    build:
+      context: ./prom2chronos
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+      CHRONOS_URL: http://chronos:7778
+      SCOPE_ID: ${DEMO_CHRONOS_SCOPE_ID:-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}
+      POLL_INTERVAL: "10"
+    depends_on:
+      prometheus:
+        condition: service_started
+      chronos:
+        condition: service_started
+
 volumes:
   pgdata:
+  promdata:
+  grafanadata:

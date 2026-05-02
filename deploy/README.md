@@ -29,30 +29,17 @@ No mocks: every container runs the real upstream binary.
 
 | Service | Source | Pin |
 |---|---|---|
-| mnemos | `ghcr.io/felixgeelhaar/mnemos:0.12.0` | `MNEMOS_TAG` env (`.env`) |
-| chronos | `ghcr.io/felixgeelhaar/chronos:0.3.0` | `CHRONOS_TAG` env (`.env`) |
-| nous | `ghcr.io/felixgeelhaar/nous:0.1.1` | `NOUS_TAG` env (`.env`) |
-| praxis | sibling repo build | `OLYMP_STACK_ROOT/praxis/` |
+| mnemos | `ghcr.io/felixgeelhaar/mnemos:0.13.0` | `MNEMOS_TAG` env (`.env`) |
+| chronos | `ghcr.io/felixgeelhaar/chronos:0.4.0` | `CHRONOS_TAG` env (`.env`) |
+| nous | `ghcr.io/felixgeelhaar/nous:0.2.0` | `NOUS_TAG` env (`.env`) |
+| praxis | `ghcr.io/felixgeelhaar/praxis:0.1.0` | `PRAXIS_TAG` env (`.env`) |
 | olymp | `ghcr.io/felixgeelhaar/olymp:0.1.2` | `OLYMP_TAG` env (`.env`) |
 
-Mnemos + Chronos + Nous pull pinned production images from GHCR. Praxis
-is still in active development; it builds from sibling source on disk.
-When it publishes, swap its `build:` block for `image:` in
-`docker-compose.yml` and add `PRAXIS_TAG` to `.env`.
+All five layers pull pinned production images from GHCR.
 
 > **Tag format note.** Goreleaser strips the leading `v` from
-> `{{ .Version }}` for image tags. GHCR tags look like `0.12.0`, not
-> `v0.12.0`. Pin accordingly in `.env`.
-
-### Required sibling layout (until praxis publishes)
-
-```
-~/Developer/projects/business-felix-geelhaar/
-├── olymp/        ← run docker compose from here
-└── praxis/
-```
-
-Override the parent dir via `OLYMP_STACK_ROOT` in `.env`.
+> `{{ .Version }}` for image tags. GHCR tags look like `0.13.0`, not
+> `v0.13.0`. Pin accordingly in `.env`.
 
 ## Run it
 
@@ -115,6 +102,46 @@ curl http://localhost:8080/v1/runs/stream
 
 # Per-service health
 for p in 7777 7778 7780 7781; do curl -s http://localhost:$p/healthz; done
+```
+
+## Full demo with Prometheus + Grafana + broken services
+
+The base stack runs Olymp's loop against empty cognitive-stack data.
+For a more compelling walkthrough, the `demo` profile adds two
+deliberately-misbehaving sample services, Prometheus, Grafana, and a
+`prom2chronos` bridge that turns scraped metric values into Chronos
+observations.
+
+```bash
+./deploy/demo-full.sh
+```
+
+What that script does:
+
+1. Builds a local `olymp:demo` image (carries the `seed-demo`
+   subcommand and the latest cognitive-adapter contract translations).
+2. `docker compose --profile demo up -d --build` — boots the cognitive
+   stack alongside `flaky-payments`, `slow-checkout`, Prometheus 2.55,
+   Grafana 11.3, and the bridge.
+3. Waits for `/healthz` to go green, Prometheus to scrape both fakes,
+   `seed-demo` to install three baseline claims into Mnemos, and
+   `prom2chronos` to start posting observations into Chronos.
+4. Submits one `explain` and one `remediate` run, prints the
+   provenance chain spanning all four layers.
+
+While the script is running:
+
+| URL | Shows |
+|---|---|
+| http://localhost:3000 | Grafana — anonymous viewer access. The provisioned **Olymp Demo — Broken Services** dashboard renders the live error rate + latency curves. |
+| http://localhost:9090 | Prometheus UI — try `payments_requests_total` or the same expressions the dashboard uses. |
+| http://localhost:8080/v1/runs/stream | SSE feed of Olymp run state changes. |
+| http://localhost:7778/v1/signals?scope_id=… | Raw Chronos signals derived from the bridged observations (signals appear once Chronos's compute pipeline has enough datapoints — typically a couple of minutes after the bridge starts). |
+
+Tear the demo profile down separately:
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env --profile demo down -v
 ```
 
 ## Tear down
