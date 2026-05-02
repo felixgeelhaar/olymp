@@ -23,6 +23,15 @@ type Config struct {
 	BaseURL    string
 	HTTPClient *http.Client
 	Timeout    time.Duration
+	// BearerToken, when non-empty, is attached to every request as
+	// `Authorization: Bearer <token>`. Tokens may rotate over the
+	// process lifetime; pass a TokenSource for that. If both are set,
+	// TokenSource wins.
+	BearerToken string
+	// TokenSource, when non-nil, is consulted before each request for
+	// a fresh bearer token. Use this when tokens rotate. Empty return
+	// means "no token this call".
+	TokenSource func() string
 	// Retry policy. Defaults match the rest of the cognitive stack: 5xx + 429
 	// retried, 4xx fail-fast, exponential backoff with jitter.
 	MaxAttempts  int
@@ -95,6 +104,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body, out any) err
 			req.Header.Set("Content-Type", "application/json")
 		}
 		req.Header.Set("Accept", "application/json")
+		if tok := c.bearerToken(); tok != "" {
+			req.Header.Set("Authorization", "Bearer "+tok)
+		}
 		resp, err := c.hc.Do(req)
 		if err != nil {
 			return nil, transientError{err: err}
@@ -120,6 +132,16 @@ func (c *Client) Do(ctx context.Context, method, path string, body, out any) err
 		}
 	}
 	return nil
+}
+
+// bearerToken returns the active bearer token for this request, if any.
+// TokenSource takes precedence over the static BearerToken so callers can
+// rotate tokens without rebuilding the client.
+func (c *Client) bearerToken() string {
+	if c.cfg.TokenSource != nil {
+		return c.cfg.TokenSource()
+	}
+	return c.cfg.BearerToken
 }
 
 // HTTPError is the structured error returned for non-2xx responses.

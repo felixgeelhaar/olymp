@@ -38,9 +38,12 @@ services:
     image: ghcr.io/felixgeelhaar/mnemos:${MNEMOS_TAG:-0.13.0}
     environment:
       MNEMOS_SERVE_PORT: "7777"
-      MNEMOS_DB_TYPE: postgres
-      MNEMOS_DB_DSN: postgres://olymp:olymp@postgres:5432/mnemos?sslmode=disable
-    command: ["serve", "--host", "0.0.0.0"]
+      # Mnemos uses a single MNEMOS_DB_URL (registered scheme dispatcher).
+      MNEMOS_DB_URL: postgres://olymp:olymp@postgres:5432/mnemos?sslmode=disable
+      # Shared HMAC secret. Olymp self-mints agent JWTs against this so
+      # write paths to /v1/* succeed. Override via .env in production.
+      MNEMOS_JWT_SECRET: ${STACK_JWT_SECRET_HEX:?STACK_JWT_SECRET_HEX must be set}
+    command: ["serve"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,6 +123,9 @@ services:
       OLYMP_CHRONOS_URL: http://chronos:7778
       OLYMP_NOUS_URL: http://nous:8080
       OLYMP_PRAXIS_URL: http://praxis:8080
+      # Same HMAC secret as Mnemos. Olymp self-mints a 24-h agent JWT,
+      # rotates it ahead of expiry, and attaches it to every Mnemos call.
+      OLYMP_AUTH_SECRET_HEX: ${STACK_JWT_SECRET_HEX:?STACK_JWT_SECRET_HEX must be set}
     command: ["serve", "--addr", ":8080"]
     depends_on:
       postgres:

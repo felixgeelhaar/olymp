@@ -20,6 +20,7 @@ import (
 	"github.com/felixgeelhaar/olymp/internal/adapters/praxis"
 	"github.com/felixgeelhaar/olymp/internal/api"
 	"github.com/felixgeelhaar/olymp/internal/audit"
+	"github.com/felixgeelhaar/olymp/internal/auth"
 	"github.com/felixgeelhaar/olymp/internal/domain"
 	"github.com/felixgeelhaar/olymp/internal/engine"
 	"github.com/felixgeelhaar/olymp/internal/eventbus"
@@ -67,8 +68,12 @@ func cmdServe(args []string) error {
 			Praxis:  &fake.Praxis{Result: domain.ActionResult{Status: "succeeded"}},
 		}
 	} else {
+		mnemosTokenSrc, err := buildMnemosTokenSource()
+		if err != nil {
+			return &OlympError{Code: "auth", Message: "build mnemos token source: " + err.Error(), Cause: err}
+		}
 		layers = ports.Layers{
-			Mnemos:  mnemos.New(httpx.Config{BaseURL: *mnemosURL}),
+			Mnemos:  mnemos.New(httpx.Config{BaseURL: *mnemosURL, TokenSource: mnemosTokenSrc}),
 			Chronos: chronos.New(httpx.Config{BaseURL: *chronosURL}),
 			Nous:    nous.New(httpx.Config{BaseURL: *nousURL}),
 			Praxis:  praxis.New(httpx.Config{BaseURL: *praxisURL}),
@@ -115,4 +120,36 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// buildMnemosTokenSource wires the rotating-JWT issuer for outbound
+// Mnemos calls. Inputs:
+//
+//   - OLYMP_MNEMOS_TOKEN — pre-minted static token; if set, used as-is.
+//     Useful for deployments that mint tokens out-of-band (CI vault,
+//     init container, etc.).
+//   - OLYMP_AUTH_SECRET_HEX — hex-encoded HMAC secret shared with
+//     Mnemos. When set, Olymp self-mints an agent JWT and rotates it
+//     before expiry.
+//
+// Returns nil when neither is set: adapters fall back to no-auth,
+// which is fine when Mnemos itself is in no-auth mode (tests).
+func buildMnemosTokenSource() (func() string, error) {
+	if static := os.Getenv("OLYMP_MNEMOS_TOKEN"); static != "" {
+		return func() string { return static }, nil
+	}
+	hex := os.Getenv("OLYMP_AUTH_SECRET_HEX")
+	if hex == "" {
+		return nil, nil
+	}
+	secret, err := auth.SecretFromHex(hex)
+	if err != nil {
+		return nil, err
+	}
+	issuer, err := auth.NewIssuer(secret)
+	if err != nil {
+		return nil, err
+	}
+	rts := auth.NewRotatingTokenSource(issuer, "olymp", 24*time.Hour, 1*time.Hour)
+	return rts.Token, nil
 }
