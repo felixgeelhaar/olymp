@@ -1,16 +1,14 @@
 # Olymp + the four real cognitive-stack services on one Docker network.
 #
-# Image strategy (Option B — published images preferred):
+# Image strategy: all five services pulled from GHCR.
 #
 #   mnemos  → ghcr.io/felixgeelhaar/mnemos:${MNEMOS_TAG}
 #   chronos → ghcr.io/felixgeelhaar/chronos:${CHRONOS_TAG}
-#   nous    → built from sibling source (no public image yet)
-#   praxis  → built from sibling source (no public image yet)
-#   olymp   → built from local Dockerfile
+#   nous    → ghcr.io/felixgeelhaar/nous:${NOUS_TAG}
+#   praxis  → ghcr.io/felixgeelhaar/praxis:${PRAXIS_TAG}
+#   olymp   → ghcr.io/felixgeelhaar/olymp:${OLYMP_TAG}
 #
-# Pin versions via .env (copy .env.example). Once nous + praxis publish to
-# GHCR, swap their `build:` blocks for the same `image:` pattern + drop the
-# OLYMP_STACK_ROOT requirement entirely.
+# Pin versions via .env (copy .env.example).
 #
 # Quickstart:
 #   cp deploy/.env.example deploy/.env       # edit if needed
@@ -37,7 +35,7 @@ services:
       retries: 10
 
   mnemos:
-    image: ghcr.io/felixgeelhaar/mnemos:${MNEMOS_TAG:-0.12.0}
+    image: ghcr.io/felixgeelhaar/mnemos:${MNEMOS_TAG:-0.13.0}
     environment:
       MNEMOS_SERVE_PORT: "7777"
       MNEMOS_DB_TYPE: postgres
@@ -49,13 +47,13 @@ services:
     ports:
       - "7777:7777"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7777/healthz || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7777/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
 
   chronos:
-    image: ghcr.io/felixgeelhaar/chronos:${CHRONOS_TAG:-0.3.0}
+    image: ghcr.io/felixgeelhaar/chronos:${CHRONOS_TAG:-0.4.0}
     environment:
       CHRONOS_HTTP_HOST: "0.0.0.0"
       CHRONOS_HTTP_PORT: "7778"
@@ -66,20 +64,18 @@ services:
         condition: service_healthy
     ports:
       - "7778:7778"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7778/healthz || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+    # Chronos ships a distroless image (no shell, no wget). Skip the
+    # in-container healthcheck and rely on `service_started` for ordering.
 
   nous:
-    image: ghcr.io/felixgeelhaar/nous:${NOUS_TAG:-0.1.1}
+    image: ghcr.io/felixgeelhaar/nous:${NOUS_TAG:-0.2.0}
     environment:
       NOUS_HTTP_ADDR: ":8080"
       NOUS_DB_TYPE: postgres
-      NOUS_DB_CONN: postgres://olymp:olymp@postgres:5432/nous?sslmode=disable
+      NOUS_DB_DSN: postgres://olymp:olymp@postgres:5432/nous?sslmode=disable
       NOUS_MNEMOS_URL: http://mnemos:7777
       NOUS_CHRONOS_URL: http://chronos:7778
+      NOUS_PRAXIS_ADDR: http://praxis:8080
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,22 +83,16 @@ services:
         condition: service_started
       chronos:
         condition: service_started
+      praxis:
+        condition: service_started
     ports:
       - "7780:8080"   # Nous HTTP
       - "50051:50051" # Nous gRPC
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+    # Nous ships a distroless image (no shell, no wget). Skip the
+    # in-container healthcheck and rely on `service_started` for ordering.
 
-  # praxis: no published image yet — built from sibling source.
-  # When praxis publishes to GHCR, replace `build:` with:
-  #   image: ghcr.io/felixgeelhaar/praxis:${PRAXIS_TAG}
   praxis:
-    build:
-      context: ${OLYMP_STACK_ROOT:-../..}/praxis
-      dockerfile: Dockerfile
+    image: ghcr.io/felixgeelhaar/praxis:${PRAXIS_TAG:-0.1.0}
     environment:
       PRAXIS_HTTP_PORT: "8080"
       PRAXIS_DB_TYPE: postgres

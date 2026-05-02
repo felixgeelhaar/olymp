@@ -97,6 +97,14 @@ func (r *runRepo) Save(ctx context.Context, run domain.Run) error {
 	}
 	defer tx.Rollback() //nolint:errcheck
 
+	// Postgres column is `scope text[] not null default '{}'`. pq.Array
+	// of a nil slice serialises to NULL, which trips the not-null
+	// constraint. Normalise nil → empty slice so the default makes sense.
+	scope := run.Scope
+	if scope == nil {
+		scope = []string{}
+	}
+
 	_, err = tx.ExecContext(ctx, `
 		insert into runs
 		  (id, tenant_org, tenant_team, tenant_user,
@@ -126,7 +134,7 @@ func (r *runRepo) Save(ctx context.Context, run domain.Run) error {
 	`,
 		run.ID, run.Tenant.Org, run.Tenant.Team, run.Tenant.User,
 		run.Intent.Type, payload, nullString(run.Intent.Subject), run.Session.ID,
-		run.Caller.Type, run.Caller.ID, nullString(run.Caller.Name), pq.Array(run.Scope),
+		run.Caller.Type, run.Caller.ID, nullString(run.Caller.Name), pq.Array(scope),
 		string(run.Status), run.Iteration, goal, lastErr, pendingDecision,
 		run.StartedAt.UTC(), run.UpdatedAt.UTC(), completedAt,
 	)
