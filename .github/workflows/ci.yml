@@ -51,12 +51,12 @@ jobs:
           go-version: "1.26.x"
           check-latest: true
           cache: true
-      - uses: golangci/golangci-lint-action@v7
+      - uses: golangci/golangci-lint-action@v9
         with:
-          # v6 of the action doesn't accept golangci-lint v2.x. v1.62 of
-          # the linter itself is built against Go 1.23 and fails to load
-          # Go 1.26 modules. Pair: action v7 + linter v2.1.
-          version: v2.1.0
+          # action@v9 + linter v2.12.1 is the same pair praxis ships;
+          # earlier pairs were built against older Go and refuse to load
+          # the Go 1.26 module config.
+          version: v2.12.1
           args: --timeout=5m
 
   postgres-integration:
