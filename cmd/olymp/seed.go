@@ -81,7 +81,7 @@ func cmdSeedDemo(_ []string) error {
 	if err != nil {
 		return &OlympError{Code: "post", Message: "post claims: " + err.Error(), Cause: err}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	raw, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode/100 != 2 {
 		return &OlympError{Code: "mnemos_reject", Message: fmt.Sprintf("mnemos %d: %s", resp.StatusCode, raw)}

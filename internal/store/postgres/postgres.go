@@ -255,7 +255,7 @@ func (r *runRepo) List(ctx context.Context, filter domain.RunFilter) ([]domain.R
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []domain.Run
 	for rows.Next() {
 		run, err := scanRun(rows)
@@ -370,7 +370,7 @@ func loadProvenance(ctx context.Context, db *sql.DB, runID string) ([]domain.Pro
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var steps []domain.ProvenanceStep
 	for rows.Next() {
 		var (
@@ -492,7 +492,7 @@ func (r *sessionRepo) List(ctx context.Context, filter domain.SessionFilter) ([]
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []domain.Session
 	for rows.Next() {
 		var (
@@ -572,7 +572,7 @@ func (r *intentTypeRepo) List(ctx context.Context) ([]domain.IntentType, error) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []domain.IntentType
 	for rows.Next() {
 		var (
@@ -619,7 +619,7 @@ func (r *auditRepo) ListForRun(ctx context.Context, runID string) ([]domain.Audi
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return collectAudit(rows)
 }
 
@@ -657,7 +657,7 @@ func (r *auditRepo) Search(ctx context.Context, q domain.AuditQuery) ([]domain.A
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out, err := collectAudit(rows)
 	if err != nil {
 		return nil, err

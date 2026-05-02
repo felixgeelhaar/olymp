@@ -62,7 +62,7 @@ func TestClient_5xxRetriesThenSucceeds(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		n := atomic.AddInt32(&calls, 1)
 		if n < 3 {
-			http.Error(w, "boom", 503)
+			http.Error(w, "boom", http.StatusServiceUnavailable)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -87,7 +87,7 @@ func TestClient_429Retries(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		n := atomic.AddInt32(&calls, 1)
 		if n < 2 {
-			http.Error(w, "rate", 429)
+			http.Error(w, "rate", http.StatusTooManyRequests)
 			return
 		}
 		_, _ = w.Write([]byte(`{}`))

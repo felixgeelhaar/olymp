@@ -97,7 +97,7 @@ func (c *Client) Stream(ctx context.Context, filter domain.RunFilter) (<-chan do
 	}
 	req.Header.Set("Accept", "text/event-stream")
 	c.applyCallerHeaders(req)
-	resp, err := c.hc.Do(req)
+	resp, err := c.hc.Do(req) //nolint:bodyclose // closed in goroutine below for the success path
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (c *Client) Stream(ctx context.Context, filter domain.RunFilter) (<-chan do
 	out := make(chan domain.RunEvent, 32)
 	go func() {
 		defer close(out)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		s := bufio.NewScanner(resp.Body)
 		s.Buffer(make([]byte, 0, 64*1024), 1<<20)
 		for s.Scan() {
@@ -154,7 +154,7 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	respBody, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode >= 400 {
 		return &Error{Status: resp.StatusCode, Body: string(respBody), URL: req.URL.String()}

@@ -20,6 +20,23 @@ linters:
     - nakedret
     - bodyclose
 
+  settings:
+    revive:
+      rules:
+        # `exported` demands Godoc on every exported symbol. The
+        # load-bearing surface (engine / api / ports / store /
+        # adapters) carries doc comments; the long tail of trivial
+        # accessors and value-types is documented at the file level.
+        # Disabling the rule project-wide rather than dilute existing
+        # comments with auto-generated boilerplate. Mirrors praxis.
+        - name: exported
+          disabled: true
+        # Identical reason: `unused-parameter` flags every `_ = ctx`
+        # placeholder on interface-driven code where the parameter
+        # exists to match the port signature. Useless noise.
+        - name: unused-parameter
+          disabled: true
+
   exclusions:
     rules:
       - path: _test\.go

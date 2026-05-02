@@ -174,7 +174,7 @@ func axiRemarshal(in, out any) error {
 
 // dispatchAxiTool routes an MCP tool invocation through the axi-go kernel.
 // Returns the typed Out from the kernel result.
-func dispatchAxiTool[Out any](ctx context.Context, kernel *axi.Kernel, sessionID, mcpName string, in any) (Out, error) {
+func dispatchAxiTool[Out any](ctx context.Context, kernel *axi.Kernel, mcpName string, in any) (Out, error) {
 	var zero Out
 	inputMap, err := axiToInputMap(in)
 	if err != nil {

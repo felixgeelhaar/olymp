@@ -163,11 +163,10 @@ func checkType(key, want string, v any) error {
 			return &ErrValidation{Field: key, Reason: "must be number"}
 		}
 	case "integer":
-		switch v.(type) {
+		switch f := v.(type) {
 		case int, int32, int64:
 			return nil
 		case float64:
-			f := v.(float64)
 			if f != float64(int64(f)) {
 				return &ErrValidation{Field: key, Reason: "must be integer"}
 			}

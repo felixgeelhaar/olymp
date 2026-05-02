@@ -179,7 +179,7 @@ func cmdMCP(args []string) error {
 		ValidateInput().
 		Handler(func(ctx context.Context, in mcpSubmitInput) (domain.Run, error) {
 			if kernel != nil {
-				return dispatchAxiTool[domain.Run](ctx, kernel, "", "submit_intent", in)
+				return dispatchAxiTool[domain.Run](ctx, kernel, "submit_intent", in)
 			}
 			ctx = api.WithCaller(ctx, mcpCaller())
 			return svc.Submit(ctx, domain.Intent{Type: in.Type, Subject: in.Subject, Payload: in.Payload})
@@ -190,7 +190,7 @@ func cmdMCP(args []string) error {
 		ValidateInput().
 		Handler(func(ctx context.Context, in mcpInspectInput) (domain.RunSnapshot, error) {
 			if kernel != nil {
-				return dispatchAxiTool[domain.RunSnapshot](ctx, kernel, "", "inspect_run", in)
+				return dispatchAxiTool[domain.RunSnapshot](ctx, kernel, "inspect_run", in)
 			}
 			return svc.Inspect(ctx, in.RunID)
 		})
@@ -204,7 +204,7 @@ func cmdMCP(args []string) error {
 			if kernel != nil {
 				return dispatchAxiTool[struct {
 					OK bool `json:"ok"`
-				}](ctx, kernel, "", "steer_run", in)
+				}](ctx, kernel, "steer_run", in)
 			}
 			ctx = api.WithCaller(ctx, mcpCaller())
 			err := svc.Steer(ctx, in.RunID, domain.SteerCommand{
@@ -219,7 +219,7 @@ func cmdMCP(args []string) error {
 		Description("Kill switch: pause every non-terminal run and deny pending approvals.").
 		Handler(func(ctx context.Context, in mcpHaltInput) (mcpHaltOutput, error) {
 			if kernel != nil {
-				return dispatchAxiTool[mcpHaltOutput](ctx, kernel, "", "halt", in)
+				return dispatchAxiTool[mcpHaltOutput](ctx, kernel, "halt", in)
 			}
 			ctx = api.WithCaller(ctx, mcpCaller())
 			ids, err := svc.Halt(ctx, in.Reason)
@@ -230,7 +230,7 @@ func cmdMCP(args []string) error {
 		Description("List the IntentTypes registered with the runtime.").
 		Handler(func(ctx context.Context, _ struct{}) (mcpListIntentsOutput, error) {
 			if kernel != nil {
-				return dispatchAxiTool[mcpListIntentsOutput](ctx, kernel, "", "list_intents", struct{}{})
+				return dispatchAxiTool[mcpListIntentsOutput](ctx, kernel, "list_intents", struct{}{})
 			}
 			types, err := registry.List(ctx)
 			return mcpListIntentsOutput{IntentTypes: types}, err
@@ -241,7 +241,7 @@ func cmdMCP(args []string) error {
 		ValidateInput().
 		Handler(func(ctx context.Context, in mcpExplainInput) (explain.Chain, error) {
 			if kernel != nil {
-				return dispatchAxiTool[explain.Chain](ctx, kernel, "", "explain_run", in)
+				return dispatchAxiTool[explain.Chain](ctx, kernel, "explain_run", in)
 			}
 			return explain.Build(ctx, repos.Runs, layers, in.RunID)
 		})
@@ -250,7 +250,7 @@ func cmdMCP(args []string) error {
 		Description("Return the agent-go AgentDescriptor for this runtime — capabilities, actions, trust level. Lets agent-go agents discover what Olymp can do.").
 		Handler(func(ctx context.Context, _ struct{}) (agentprotocol.AgentDescriptor, error) {
 			if kernel != nil {
-				return dispatchAxiTool[agentprotocol.AgentDescriptor](ctx, kernel, "", "agent_descriptor", struct{}{})
+				return dispatchAxiTool[agentprotocol.AgentDescriptor](ctx, kernel, "agent_descriptor", struct{}{})
 			}
 			return agentdesc.Build(ctx, registry, "olymp", "Olymp — AI runtime for the cognitive stack.")
 		})

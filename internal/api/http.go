@@ -176,7 +176,7 @@ func handleStream(svc *Service) http.HandlerFunc {
 					return
 				}
 				body, _ := json.Marshal(ev)
-				fmt.Fprintf(w, "data: %s\n\n", body)
+				_, _ = fmt.Fprintf(w, "data: %s\n\n", body)
 				flusher.Flush()
 			case <-time.After(15 * time.Second):
 				// keepalive
