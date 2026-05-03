@@ -47,11 +47,115 @@
     <div><p><strong>Replay a 2am incident</strong>The chain that paged you also reproduces the decision, weeks later, against the same inputs.</p></div>
     <div><p><strong>"What would the agent have done?"</strong>Run a recorded chain through a new policy without re-firing side effects.</p></div>
   </div>
-  <p class="dim" style="margin-top: 18px; font-size: 13px;">
-    Live cognitive-loop view ships in the binary at
-    <code>/dashboard</code> — radial topology, glowing packets per
-    layer call, click any packet for the JSON sent and received.
-  </p>
+  <figure class="hero-loop" aria-label="Animated preview of the live dashboard: packets travel from Olymp out to each cognitive layer and back, in a continuous loop.">
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" role="img">
+  <defs>
+    <radialGradient id="heroGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7ad1ff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7ad1ff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Packet motion paths from olymp center (360,180) to each layer node. -->
+    <path id="path-mnemos"  d="M 360,180 L 200,90"  fill="none"/>
+    <path id="path-chronos" d="M 360,180 L 520,90"  fill="none"/>
+    <path id="path-nous"    d="M 360,180 L 200,270" fill="none"/>
+    <path id="path-praxis"  d="M 360,180 L 520,270" fill="none"/>
+  </defs>
+  <style>
+    .h-link { stroke: #2a323d; stroke-width: 1.5; }
+    .h-node { fill: #14181d; stroke: #2a323d; stroke-width: 1.5; }
+    .h-node-accent { stroke: #7ad1ff; }
+    .h-label { fill: #e6e8eb; font-weight: 600; text-anchor: middle; }
+    .h-sub { fill: #8a93a0; font-size: 10px; text-anchor: middle; }
+    .h-accent { fill: #7ad1ff; }
+    .h-pulse {
+      fill: #7ad1ff;
+      filter: drop-shadow(0 0 6px #7ad1ff);
+    }
+    @media (prefers-color-scheme: light) {
+      .h-link { stroke: #d1d5db; }
+      .h-node { fill: #ffffff; stroke: #d1d5db; }
+      .h-node-accent { stroke: #0066b3; }
+      .h-label { fill: #131720; }
+      .h-sub { fill: #5a6272; }
+      .h-accent { fill: #0066b3; }
+      .h-pulse { fill: #0066b3; filter: drop-shadow(0 0 6px #0066b3); }
+    }
+  </style>
+
+  <!-- Connection lines -->
+  <line class="h-link" x1="360" y1="180" x2="200" y2="90"/>
+  <line class="h-link" x1="360" y1="180" x2="520" y2="90"/>
+  <line class="h-link" x1="360" y1="180" x2="200" y2="270"/>
+  <line class="h-link" x1="360" y1="180" x2="520" y2="270"/>
+
+  <!-- Layer nodes -->
+  <g>
+    <circle class="h-node h-node-accent" cx="200" cy="90" r="40"/>
+    <text class="h-label h-accent" x="200" y="88">mnemos</text>
+    <text class="h-sub" x="200" y="103">memory</text>
+  </g>
+  <g>
+    <circle class="h-node h-node-accent" cx="520" cy="90" r="40"/>
+    <text class="h-label h-accent" x="520" y="88">chronos</text>
+    <text class="h-sub" x="520" y="103">time</text>
+  </g>
+  <g>
+    <circle class="h-node h-node-accent" cx="200" cy="270" r="40"/>
+    <text class="h-label h-accent" x="200" y="268">nous</text>
+    <text class="h-sub" x="200" y="283">decisions</text>
+  </g>
+  <g>
+    <circle class="h-node h-node-accent" cx="520" cy="270" r="40"/>
+    <text class="h-label h-accent" x="520" y="268">praxis</text>
+    <text class="h-sub" x="520" y="283">execution</text>
+  </g>
+
+  <!-- Center: olymp -->
+  <circle cx="360" cy="180" r="80" fill="url(#heroGlow)"/>
+  <circle class="h-node h-node-accent" cx="360" cy="180" r="42"/>
+  <text class="h-label h-accent" x="360" y="178">olymp</text>
+  <text class="h-sub" x="360" y="194">runtime</text>
+
+  <!-- Animated packets — five flying along each path on a 5-second cycle.
+       Stages stagger by 1 second to mimic a real loop iteration order:
+       mnemos (recall) → chronos (signals) → nous (decide) → praxis (act) → mnemos (learn). -->
+  <circle class="h-pulse" r="6">
+    <animateMotion dur="5s" repeatCount="indefinite" rotate="0" begin="0s" fill="freeze">
+      <mpath href="#path-mnemos"/>
+    </animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.18;0.22" dur="5s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle class="h-pulse" r="6">
+    <animateMotion dur="5s" repeatCount="indefinite" rotate="0" begin="1s" fill="freeze">
+      <mpath href="#path-chronos"/>
+    </animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.18;0.22" dur="5s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+  <circle class="h-pulse" r="6">
+    <animateMotion dur="5s" repeatCount="indefinite" rotate="0" begin="2s" fill="freeze">
+      <mpath href="#path-nous"/>
+    </animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.18;0.22" dur="5s" repeatCount="indefinite" begin="2s"/>
+  </circle>
+  <circle class="h-pulse" r="6">
+    <animateMotion dur="5s" repeatCount="indefinite" rotate="0" begin="3s" fill="freeze">
+      <mpath href="#path-praxis"/>
+    </animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.18;0.22" dur="5s" repeatCount="indefinite" begin="3s"/>
+  </circle>
+  <circle class="h-pulse" r="6">
+    <animateMotion dur="5s" repeatCount="indefinite" rotate="0" begin="4s" fill="freeze">
+      <mpath href="#path-mnemos"/>
+    </animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.18;0.22" dur="5s" repeatCount="indefinite" begin="4s"/>
+  </circle>
+</svg>
+    <figcaption class="dim">
+      Live preview. The dashboard ships in the binary at
+      <code>/dashboard</code> — click any packet for the JSON each
+      layer received and returned.
+    </figcaption>
+  </figure>
 </section>
 
 <section id="scenario" aria-labelledby="scenario-heading">

@@ -429,6 +429,36 @@ pre code { background: transparent; padding: 0; }
   .pipe-band .row > strong { padding-top: 8px; }
 }
 
+/* Hero loop preview — animated SVG mimicking the live dashboard. */
+.hero-loop {
+  margin: 36px 0 0;
+  padding: 24px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.hero-loop svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+}
+.hero-loop figcaption {
+  margin: 16px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-dim);
+}
+.hero-loop figcaption code {
+  font-size: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Honour OS accessibility setting. SMIL respects this via the
+   * pause-animation attribute — easiest cross-browser approach is
+   * to simply hide the animated packets. */
+  .hero-loop svg .h-pulse { display: none; }
+}
+
 /* "What you can build" / "Use cases" bullets right under the hero. */
 .use-cases {
   display: grid;
