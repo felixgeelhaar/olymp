@@ -63,6 +63,18 @@ services:
       CHRONOS_HTTP_PORT: "7778"
       CHRONOS_DB_TYPE: postgres
       CHRONOS_DB_CONN: postgres://olymp:olymp@postgres:5432/chronos?sslmode=disable
+      # Detection on every tick. Demo posts ~6 observations per
+      # entity per minute via prom2chronos; defaults assume
+      # production-shape data with much longer baselines, so loosen
+      # thresholds + shorten windows so signals surface inside the
+      # demo's 90-second incident window.
+      CHRONOS_DETECTION_INTERVAL: "5s"
+      CHRONOS_SPIKE_WINDOW: "3"
+      CHRONOS_SPIKE_Z: "2.0"
+      CHRONOS_DROP_Z: "2.0"
+      CHRONOS_TREND_MIN_POINTS: "3"
+      CHRONOS_TREND_MIN_SLOPE: "0.001"
+      CHRONOS_STALL_MIN_POINTS: "3"
     restart: on-failure:5
     depends_on:
       postgres:
