@@ -50,12 +50,22 @@
   </section>
 
   <section class="feed">
-    <h3>recent runs</h3>
+    <h3>recent runs <span class="dim">(click for full chain)</span></h3>
     <ol id="runs"></ol>
     <h3>event log <span class="dim" id="feed-rate"></span></h3>
     <ol class="log" id="log"></ol>
   </section>
 </main>
+
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <h2 id="drawer-title">Run inspector</h2>
+    <button id="drawer-close" aria-label="Close inspector">×</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <p class="dim">Click a packet, a layer node, or a run row to see what each layer received and returned.</p>
+  </div>
+</aside>
 
 <script type="module" src="dashboard.js"></script>
 </body>
