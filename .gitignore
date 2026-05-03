@@ -25,3 +25,5 @@ coverage.html
 .env.local
 settings.local.json
 deploy/prom2chronos/prom2chronos
+deploy/broken-services/flaky-payments
+deploy/broken-services/slow-checkout

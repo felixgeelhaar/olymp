@@ -31,9 +31,13 @@ var (
 )
 
 // baseLatency drifts upward over time. After ~90s of uptime the p99
-// is well past any reasonable SLO. /admin/heal shifts `start`
-// forward to drop the curve back to baseline.
-func baseLatency(start time.Time) time.Duration {
+// is well past any reasonable SLO. After /admin/heal fires, latency
+// stays parked at the healthy baseline — modelling a real rollback
+// that holds.
+func baseLatency(start time.Time, healed bool) time.Duration {
+	if healed {
+		return 80 * time.Millisecond
+	}
 	secs := time.Since(start).Seconds()
 	base := 80.0 + 18.0*secs // ms — 80→1700ms over 90s
 	if base > 2500 {
@@ -46,23 +50,25 @@ func main() {
 	addr := envOr("ADDR", ":9102")
 	rps := envInt("RPS", 5)
 	var (
-		start = time.Now()
-		mu    sync.RWMutex
+		start  = time.Now()
+		healed bool
+		mu     sync.RWMutex
 	)
-	getStart := func() time.Time {
+	state := func() (time.Time, bool) {
 		mu.RLock()
 		defer mu.RUnlock()
-		return start
+		return start, healed
 	}
 	heal := func() {
 		mu.Lock()
-		start = time.Now()
+		healed = true
 		mu.Unlock()
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/checkout", func(w http.ResponseWriter, r *http.Request) {
-		base := baseLatency(getStart())
+		s, h := state()
+		base := baseLatency(s, h)
 		jitter := time.Duration(rand.Intn(int(base / 4)))
 		dur := base + jitter
 		time.Sleep(dur)

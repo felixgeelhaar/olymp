@@ -38,10 +38,13 @@ var (
 )
 
 // errorRate is the fraction of requests that fail. Climbs from a
-// healthy baseline to a misbehaving one. /admin/heal shifts `start`
-// forward so the curve drops back to healthy — that's how Olymp's
-// remediate loop resolves the demo incident.
-func errorRate(start time.Time) float64 {
+// healthy baseline to a misbehaving one. After /admin/heal fires,
+// the rate stays parked at the healthy baseline — modelling a real
+// rollback that holds.
+func errorRate(start time.Time, healed bool) float64 {
+	if healed {
+		return 0.02
+	}
 	secs := time.Since(start).Seconds()
 	switch {
 	case secs < 30:
@@ -57,17 +60,18 @@ func main() {
 	addr := envOr("ADDR", ":9101")
 	rps := envInt("RPS", 5)
 	var (
-		start = time.Now()
-		mu    sync.RWMutex
+		start  = time.Now()
+		healed bool
+		mu     sync.RWMutex
 	)
-	getStart := func() time.Time {
+	state := func() (time.Time, bool) {
 		mu.RLock()
 		defer mu.RUnlock()
-		return start
+		return start, healed
 	}
 	heal := func() {
 		mu.Lock()
-		start = time.Now()
+		healed = true
 		mu.Unlock()
 	}
 
@@ -75,7 +79,7 @@ func main() {
 	mux.HandleFunc("/pay", func(w http.ResponseWriter, r *http.Request) {
 		dur := time.Duration(20+rand.Intn(80)) * time.Millisecond
 		time.Sleep(dur)
-		if rand.Float64() < errorRate(getStart()) {
+		if s, h := state(); rand.Float64() < errorRate(s, h) {
 			requests.WithLabelValues("error").Inc()
 			latency.WithLabelValues("error").Observe(dur.Seconds())
 			http.Error(w, "payment failed", http.StatusInternalServerError)
