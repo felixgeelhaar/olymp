@@ -27,8 +27,8 @@ func TestHandler_ServesIndex(t *testing.T) {
 	if !strings.Contains(string(body), "olymp") {
 		t.Errorf("index missing brand: %.200q", body)
 	}
-	if !strings.Contains(string(body), "/v1/runs/stream") {
-		// dashboard.js connects to this path; index references it via the script tag.
+	if !strings.Contains(string(body), "dashboard.js") {
+		t.Errorf("index missing script tag: %.200q", body)
 	}
 }
 
