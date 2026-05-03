@@ -11,6 +11,45 @@ GHCR). This file is the human-readable summary.
 
 No unreleased changes.
 
+## [0.1.4] — 2026-05-03
+
+Live operational view + closed remaining demo gaps.
+
+### Added
+
+- **Live cognitive-loop dashboard** at `/dashboard` (embedded HTML
+  + CSS + vanilla JS, served from the same origin as `/v1/runs/stream`).
+  Four cognitive-layer nodes arranged radially around the central
+  Olymp runtime; each layer call animates a glowing packet from the
+  centre to the named layer along the connection line, then briefly
+  highlights the node. Live counters: in-flight, completed,
+  failed, events/min. Run feed + raw event log on the right.
+- **Inspector drawer** on the dashboard. Click any packet, layer
+  node, or run row → fetches `/v1/runs/{id}` and renders the
+  per-stage JSON the layer received (`inputs`) and returned
+  (`outputs`), with duration in ms and an inline error block when
+  present. Layer-view shows the last 12 steps that touched the
+  clicked layer across recent runs.
+- **Bundled Ollama daemon** in the demo profile. Nous's commitment
+  extractor talks to a local Llama via the OpenAI-compatible
+  endpoint — no vendor key required. Defaults to `llama3.2` (~2 GB,
+  pulled on first run); override via `NOUS_LLM_MODEL`. Set
+  `NOUS_LLM_PROVIDER=""` to fall back to the deterministic
+  ScriptedExtractor when running offline.
+- **Multi-action playbook**. Remediate intents fire two
+  `http_request` actions back-to-back — heal `flaky-payments` AND
+  `slow-checkout`. Praxis runs them sequentially through the same
+  executor; the audit log captures both.
+
+### Changed
+
+- **Chronos detector thresholds tuned for the demo's 90s incident
+  window** (`CHRONOS_SPIKE_WINDOW=3`, `CHRONOS_SPIKE_Z=2.0`,
+  `CHRONOS_TREND_MIN_POINTS=3`, `CHRONOS_TREND_MIN_SLOPE=0.001`,
+  `CHRONOS_STALL_MIN_POINTS=3`, `CHRONOS_DETECTION_INTERVAL=5s`).
+  Spike + Trend now fire inside the demo wait loop instead of
+  staying silent until the page caveat reads "no signals yet".
+
 ## [0.1.3] — 2026-05-03
 
 End-to-end loop closure + adapter contract translations.

@@ -47,6 +47,11 @@
     <div><p><strong>Replay a 2am incident</strong>The chain that paged you also reproduces the decision, weeks later, against the same inputs.</p></div>
     <div><p><strong>"What would the agent have done?"</strong>Run a recorded chain through a new policy without re-firing side effects.</p></div>
   </div>
+  <p class="dim" style="margin-top: 18px; font-size: 13px;">
+    Live cognitive-loop view ships in the binary at
+    <code>/dashboard</code> — radial topology, glowing packets per
+    layer call, click any packet for the JSON sent and received.
+  </p>
 </section>
 
 <section id="scenario" aria-labelledby="scenario-heading">
@@ -273,6 +278,10 @@ cd olymp
   <p>While it's running, open:</p>
   <div class="cols">
     <div class="card">
+      <h3>localhost:8080/dashboard</h3>
+      <p>Live cognitive-loop view. Radial topology of the four layers around Olymp; glowing packets per call; click any packet for the JSON each layer received and returned.</p>
+    </div>
+    <div class="card">
       <h3>localhost:3000</h3>
       <p>Grafana — anonymous viewer enabled. The <strong>Olymp Demo — Broken Services</strong> dashboard refreshes every 5s.</p>
     </div>
@@ -282,7 +291,7 @@ cd olymp
     </div>
     <div class="card">
       <h3>localhost:8080/v1/runs/stream</h3>
-      <p>SSE feed of every run state change — <code>curl -N</code> from a terminal.</p>
+      <p>Raw SSE feed of every run state change — <code>curl -N</code> from a terminal if you'd rather skip the UI.</p>
     </div>
   </div>
 
