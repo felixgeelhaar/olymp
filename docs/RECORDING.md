@@ -1,13 +1,15 @@
 # Recording the demo for the landing page
 
-The page has two recording slots, both with graceful fallbacks:
+The page has two recording slots:
 
-| Slot | File | Fallback | Best for |
+| Slot | File | Default | Best for |
 |---|---|---|---|
-| **Terminal** | `docs/assets/demo.cast` | static `<pre>` block | demo-full.sh output, curl runs |
-| **Dashboard UI** | `docs/assets/dashboard-loop.mp4` | inline animated SVG | the radial topology + packets + drawer |
+| **Terminal** | `docs/assets/demo.cast` | hand-authored cast plays via asciinema-player | demo-full.sh output, curl runs |
+| **Dashboard UI** | `docs/assets/dashboard-loop.mp4` | inline animated SVG (no `<video>` tag until file ships) | the radial topology + packets + drawer |
 
-Both are auto-loaded by the page; missing files fall through silently.
+The cast is auto-loaded by the page. The MP4 slot is currently SVG-only;
+once you record a real one, re-add a `<video>` tag in `docs/index.html`
+above the SVG and it will take over.
 
 ## Terminal recording (asciinema)
 

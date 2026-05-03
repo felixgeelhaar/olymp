@@ -49,14 +49,6 @@
     <div><p><strong>"What would the agent have done?"</strong>Run a recorded chain through a new policy without re-firing side effects.</p></div>
   </div>
   <figure class="hero-loop" aria-label="Animated preview of the live dashboard: packets travel from Olymp out to each cognitive layer and back, in a continuous loop.">
-    <!-- Recorded screen capture of the running dashboard. When the file
-         is missing or the browser blocks autoplay, the script below
-         hides this and reveals the SVG fallback. -->
-    <video id="hero-video"
-           src="assets/dashboard-loop.mp4"
-           autoplay loop muted playsinline preload="metadata"
-           style="display:none;width:100%;height:auto;border-radius:8px;background:var(--bg)">
-    </video>
 <svg id="hero-svg" viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" role="img">
   <defs>
     <radialGradient id="heroGlow" cx="50%" cy="50%" r="50%">
@@ -164,25 +156,6 @@
       <code>/dashboard</code> — click any packet for the JSON each
       layer received and returned.
     </figcaption>
-    <script>
-      (function () {
-        const v = document.getElementById('hero-video');
-        const s = document.getElementById('hero-svg');
-        if (!v || !s) return;
-        // Only show the video if the file exists AND the browser will
-        // actually play it. Default state: video hidden, SVG visible.
-        v.addEventListener('loadeddata', function () {
-          if (v.readyState >= 2 && v.videoWidth > 0) {
-            v.style.display = 'block';
-            s.style.display = 'none';
-          }
-        });
-        v.addEventListener('error', function () {
-          v.style.display = 'none';
-          s.style.display = '';
-        });
-      })();
-    </script>
   </figure>
 </section>
 
