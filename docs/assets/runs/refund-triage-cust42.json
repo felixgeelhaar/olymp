@@ -1,0 +1,65 @@
+{
+    "events": [
+        {
+            "id": "72d69ed2-9ac3-4341-840f-15e257cfaf54",
+            "run_id": "00855d21-83a4-4cc1-8db4-0653161a058d",
+            "schema_version": "",
+            "content": "executed zendesk.create_ticket \u2192 succeeded",
+            "source_input_id": "refund-triage-langgraph::00855d21-83a4-4cc1-8db4-0653161a058d",
+            "timestamp": "2026-05-03T16:43:02Z",
+            "metadata": {
+                "action": "{\"kind\": \"zendesk.create_ticket\", \"params\": {\"subject\": \"Refund review: CUST-42\", \"priority\": \"normal\"}, \"status\": \"succeeded\"}",
+                "node": "execute",
+                "node_role": "action"
+            },
+            "ingested_at": "2026-05-03T16:43:02Z"
+        },
+        {
+            "id": "236329dc-fe57-4622-a5c4-d79fcbfa65d6",
+            "run_id": "00855d21-83a4-4cc1-8db4-0653161a058d",
+            "schema_version": "",
+            "content": "decision: escalate (confidence 0.90, model scripted) \u2014 High risk score \u2014 human review required.",
+            "source_input_id": "refund-triage-langgraph::00855d21-83a4-4cc1-8db4-0653161a058d",
+            "timestamp": "2026-05-03T16:43:02Z",
+            "metadata": {
+                "decision": "{\"outcome\": \"escalate\", \"rationale\": \"High risk score \\u2014 human review required.\", \"confidence\": 0.9, \"model\": \"scripted\"}",
+                "node": "decide",
+                "node_role": "decision"
+            },
+            "ingested_at": "2026-05-03T16:43:02Z"
+        },
+        {
+            "id": "3cc66feb-9148-4729-b1ab-e508ff0ffec4",
+            "run_id": "00855d21-83a4-4cc1-8db4-0653161a058d",
+            "schema_version": "",
+            "content": "risk score = 1.00 (factors: prior_refunds=12 (>=5), tenure_days=18 (<30), amount=$245.00 > LTV $89.00)",
+            "source_input_id": "refund-triage-langgraph::00855d21-83a4-4cc1-8db4-0653161a058d",
+            "timestamp": "2026-05-03T16:43:02Z",
+            "metadata": {
+                "factors": "[\"prior_refunds=12 (>=5)\", \"tenure_days=18 (<30)\", \"amount=$245.00 > LTV $89.00\"]",
+                "node": "score_risk",
+                "node_role": "observation",
+                "score": "1.0"
+            },
+            "ingested_at": "2026-05-03T16:43:02Z"
+        },
+        {
+            "id": "026763e4-ec98-43c8-b550-b16e900136f7",
+            "run_id": "00855d21-83a4-4cc1-8db4-0653161a058d",
+            "schema_version": "",
+            "content": "fetched history for CUST-42: 12 prior refunds, $89.00 LTV, 18-day tenure",
+            "source_input_id": "refund-triage-langgraph::00855d21-83a4-4cc1-8db4-0653161a058d",
+            "timestamp": "2026-05-03T16:43:02Z",
+            "metadata": {
+                "customer_id": "CUST-42",
+                "history": "{\"prior_refunds\": 12, \"lifetime_value\": 89.0, \"tenure_days\": 18}",
+                "node": "fetch_history",
+                "node_role": "observation"
+            },
+            "ingested_at": "2026-05-03T16:43:02Z"
+        }
+    ],
+    "total": 4,
+    "limit": 50,
+    "offset": 0
+}

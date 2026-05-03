@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Olymp — durable, auditable orchestrator for agentic loops</title>
-  <meta name="description" content="Olymp orchestrates the observe → understand → decide → act → learn loop end-to-end with full provenance. Bring your own intelligence; Olymp drives it durably.">
-  <meta property="og:title" content="Olymp — durable, auditable orchestrator for agentic loops">
-  <meta property="og:description" content="Closed-loop incident response with full provenance across memory, time-series, decisions, and execution. Open source, MIT.">
+  <title>Olymp — Deterministic replay for non-deterministic agents</title>
+  <meta name="description" content="Olymp records every signal, decision, and action your AI agents take — keyed by run id, replayable months later. Drop-in audit substrate for LangGraph, CrewAI, MCP — or run the full Olymp orchestrator end-to-end.">
+  <meta property="og:title" content="Olymp — Deterministic replay for non-deterministic agents">
+  <meta property="og:description" content="Audit + replay any AI agent decision. Open source, MIT, single binary.">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.css">
 </head>
@@ -18,6 +18,7 @@
   <div class="wrap">
     <div class="logo" aria-label="Olymp">olymp<span aria-hidden="true">.</span></div>
     <nav aria-label="Primary">
+      <a href="#proof">Proof</a>
       <a href="#scenario">Scenario</a>
       <a href="#vs">Vs. alternatives</a>
       <a href="#architecture">Architecture</a>
@@ -30,23 +31,23 @@
 <main id="main" class="wrap">
 
 <section class="hero">
-  <p class="kicker">For SRE & platform teams putting AI into production.</p>
-  <h1>The orchestrator <span class="accent">your agents are missing.</span></h1>
+  <p class="kicker">For platform engineers shipping AI agents to production.</p>
+  <h1>Deterministic replay <span class="accent">for non-deterministic agents.</span></h1>
   <p class="lede">
-    Olymp drives the closed loop <em>observe → understand → decide → act → learn</em>
-    end-to-end with a single audit trail. Durable. Replayable.
-    Bring your own intelligence — Olymp wires it into a system you can
-    actually operate.
+    Your agent works in the notebook. Then it loops, hallucinates a
+    tool call, refunds the wrong customer, and you can't replay why.
+    Olymp records every signal, decision, and action — keyed by run id,
+    replayable months later, defensible to legal.
   </p>
   <div class="cta-row">
-    <a class="cta primary" href="#run">Run the demo</a>
+    <a class="cta primary" href="#proof">See a real run →</a>
     <a class="cta" href="https://github.com/felixgeelhaar/olymp" aria-label="View Olymp on GitHub">★ on GitHub</a>
-    <a class="cta ghost" href="#scenario">See it work ↓</a>
+    <a class="cta ghost" href="#run">Run it locally ↓</a>
   </div>
   <div class="use-cases">
-    <div><p><strong>Auto-remediate from alerts</strong>Your services degrade — Olymp pulls the signal, decides, fires the rollback, and writes the postmortem.</p></div>
-    <div><p><strong>Replay a 2am incident</strong>The chain that paged you also reproduces the decision, weeks later, against the same inputs.</p></div>
-    <div><p><strong>"What would the agent have done?"</strong>Run a recorded chain through a new policy without re-firing side effects.</p></div>
+    <div><p><strong>Wrap any agent.</strong>Drop-in audit beneath your LangGraph, CrewAI, or MCP agent. Four lines of HTTP per node.</p></div>
+    <div><p><strong>Replay a 2am decision.</strong>The same chain that fired in production reproduces the decision weeks later, against the same inputs.</p></div>
+    <div><p><strong>Defensible by design.</strong>Every action ties back to its decision, its evidence, its model, its weights. Open source, your data, your model.</p></div>
   </div>
   <figure class="hero-loop" aria-label="Animated preview of the live dashboard: packets travel from Olymp out to each cognitive layer and back, in a continuous loop.">
 <svg id="hero-svg" viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" role="img">
@@ -159,6 +160,43 @@
   </figure>
 </section>
 
+<section id="proof" aria-labelledby="proof-heading">
+  <p class="kicker">Proof, not vibes</p>
+  <h2 id="proof-heading">Wrap your existing agent. Replay any decision it ever made.</h2>
+  <p>
+    A four-node LangGraph refund-triage agent — running here, against
+    a real Mnemos. Each node emits one event keyed to the run id.
+    The full reasoning chain is one HTTP call away, weeks after the fact.
+  </p>
+
+  <div class="proof-grid">
+    <div class="proof-step">
+      <span class="proof-num">1</span>
+      <p><strong>fetch_history</strong><br>customer 12 prior refunds, $89 LTV, 18-day tenure</p>
+    </div>
+    <div class="proof-step">
+      <span class="proof-num">2</span>
+      <p><strong>score_risk</strong><br>risk = 1.00 (prior_refunds &gt;=5, tenure &lt;30, amount &gt; LTV)</p>
+    </div>
+    <div class="proof-step">
+      <span class="proof-num">3</span>
+      <p><strong>decide</strong><br>escalate — confidence 0.90, "high risk score, human review required"</p>
+    </div>
+    <div class="proof-step">
+      <span class="proof-num">4</span>
+      <p><strong>execute</strong><br>zendesk.create_ticket → succeeded</p>
+    </div>
+  </div>
+
+  <div class="cta-row" style="margin-top: 16px;">
+    <a class="cta primary" href="assets/runs/refund-triage-cust42.json" target="_blank" rel="noopener">See the raw run JSON →</a>
+    <a class="cta" href="https://github.com/felixgeelhaar/mnemos/tree/main/examples/refund_triage_langgraph">Source · 270 lines of Python</a>
+  </div>
+  <p class="dim" style="margin-top: 8px; font-size: 13px;">
+    run id <code>00855d21-83a4-4cc1-8db4-0653161a058d</code> — one of three personas in the demo. Re-run it locally with <code>python agent.py --customer-id CUST-42 --amount 245.00</code>.
+  </p>
+</section>
+
 <section id="scenario" aria-labelledby="scenario-heading">
   <p class="kicker">Reference scenario</p>
   <h2 id="scenario-heading">Two services start misbehaving. Watch Olymp react.</h2>
@@ -172,14 +210,13 @@
 
   <div class="callout">
     <strong>The loop closes — for real.</strong>
-    On a fresh stack the payments error rate climbs from 2% to 35%
-    over the first 80s. Chronos detects the spike + the checkout
-    latency drift. Nous (driven by a local Llama via the bundled
-    Ollama daemon) extracts a remediation commitment. Praxis fires
-    two <code>http_request</code> actions back-to-back — heals
-    flaky-payments AND slow-checkout. Error rate drops below 5% in
-    ~70s. Visible live in Grafana, recorded as a Mnemos event,
-    replayable from the audit chain.
+    Payments error rate climbs from 2% to 35% over 80s. The signals
+    layer flags the spike and the checkout latency drift. The
+    decision layer (driven by a local Llama via Ollama) plans the
+    remediation. The execution layer fires two
+    <code>http_request</code> actions — heals flaky-payments AND
+    slow-checkout. Error rate drops below 5% in ~70s. Visible live in
+    Grafana, recorded by Mnemos, replayable from the audit chain.
   </div>
 
   <div class="cols">
@@ -262,7 +299,7 @@
     <div class="what">Olymp asks the time-series layer for signals. Chronos detectors have been running on the bridged observations every 5s; the demo's tuned thresholds surface a <em>spike</em> on payments error rate and a <em>trend</em> on checkout latency.</div>
 
     <div class="stage">deciding</div>
-    <div class="what">Olymp submits memories + signals to the decision layer. Nous's commitment extractor (driven by a local Llama via the bundled Ollama daemon) produces a remediation plan; the playbook resolves it to two concrete actions. The decision is recorded with inputs + weights + outcome.</div>
+    <div class="what">Olymp submits memories + signals to the decision layer. Nous (driven by a local Llama via Ollama) produces a remediation plan; the playbook resolves it to two concrete actions. The decision is recorded with inputs + weights + outcome.</div>
 
     <div class="stage">acting</div>
     <div class="what">Olymp dispatches both <code>ActionRequest</code>s to the execution layer. Praxis runs them sequentially through the same executor — schema-validated, policy-checked, idempotent, audit-logged. In production the same path fires rollback / restart / page handlers.</div>
@@ -274,13 +311,13 @@
 
 <section id="vs" aria-labelledby="vs-heading">
   <p class="kicker">How it differs</p>
-  <h2 id="vs-heading">Where Olymp fits.</h2>
+  <h2 id="vs-heading">Trace tools log what happened. Olymp lets you replay why.</h2>
   <p>
-    Olymp is closer to <strong>durable workflow runtimes</strong>
-    (Temporal, Restate) than to <strong>agent frameworks</strong>
-    (LangGraph, AutoGen). It exists for the seam neither side covers:
-    the operationally-honest, audit-first loop that crosses memory,
-    time, decision, and action.
+    LangSmith and Langfuse log spans. LangGraph routes messages.
+    Temporal makes steps durable. Olymp's seam: the chain of evidence
+    behind a decision — claim → signal → decision → action → outcome —
+    keyed to a run id and replayable months later, with the same data
+    that fired in production.
   </p>
   <div class="vs-table" role="table" aria-label="Comparison with related tools">
     <div class="vs-row vs-head" role="row">
@@ -289,24 +326,24 @@
       <span role="columnheader">Olymp's seam</span>
     </div>
     <div class="vs-row" role="row">
+      <span role="cell"><strong>Langfuse / LangSmith</strong></span>
+      <span role="cell">Trace + span logs for LLM calls.</span>
+      <span role="cell">Olymp records the <em>chain of evidence</em>, not just the spans — replayable, not just searchable.</span>
+    </div>
+    <div class="vs-row" role="row">
       <span role="cell"><strong>LangGraph</strong></span>
       <span role="cell">Graph executor for LLM calls.</span>
-      <span role="cell">Olymp orchestrates <em>systems</em>, not LLM messages.</span>
+      <span role="cell">Olymp sits beneath LangGraph as the audit substrate. Drop in a callback; every node becomes replayable.</span>
     </div>
     <div class="vs-row" role="row">
       <span role="cell"><strong>Temporal / Restate</strong></span>
       <span role="cell">Durable workflows for any business logic.</span>
-      <span role="cell">Olymp ships a four-port cognitive contract + replay-from-audit out of the box.</span>
+      <span role="cell">Olymp ships replay-from-evidence semantics out of the box — Temporal replays steps, Olymp replays reasoning.</span>
     </div>
     <div class="vs-row" role="row">
       <span role="cell"><strong>Computer Use / Swarm</strong></span>
       <span role="cell">Model-driven action and handoffs.</span>
       <span role="cell">Olymp records every step and gates risky ones — the model decides, Olymp commits.</span>
-    </div>
-    <div class="vs-row" role="row">
-      <span role="cell"><strong>AIOps platforms</strong></span>
-      <span role="cell">Closed-vendor incident loops.</span>
-      <span role="cell">Olymp is open source, single binary, your model, your data.</span>
     </div>
   </div>
 
@@ -314,12 +351,14 @@
 
 <section id="architecture" aria-labelledby="arch-heading">
   <p class="kicker">Architecture</p>
-  <h2 id="arch-heading">Five containers, one Docker network, real upstream binaries.</h2>
+  <h2 id="arch-heading">Two ways in. One audit trail.</h2>
   <p>
-    Each layer runs the same image you'd deploy in production, against
-    a shared Postgres. Olymp speaks every layer's real HTTP API; thin
-    adapters translate Olymp's port verbs to the actual surface so
-    each layer also stays usable on its own.
+    Use <strong>Mnemos directly</strong> as a drop-in audit substrate
+    beneath your existing LangGraph / CrewAI / MCP agent — that's
+    what the refund-triage demo above does. Or run the
+    <strong>full Olymp orchestrator</strong> end-to-end across the four
+    services below, like the broken-services scenario does. Same
+    storage, same replay, different entry point.
   </p>
 
   <div class="diagram" role="img" aria-label="Olymp architecture: broken services emit metrics scraped by Prometheus; the bridge converts them to observations posted to Chronos; Olymp drives the cognitive loop across memory, time, decision, and execution layers, all sharing a Postgres.">
@@ -347,11 +386,11 @@
     </div>
 
     <div class="pipe-band accent">
-      <h4>Cognitive layers · plugged into Olymp</h4>
+      <h4>The four services Olymp drives</h4>
       <div class="row">
-        <strong>Mnemos</strong><span>memory · claims, events, point-in-time replay</span>
-        <strong>Chronos</strong><span>time · pattern detection over the bridged observations</span>
-        <strong>Nous</strong><span>decisions · commitment extraction, risk evaluation</span>
+        <strong>Mnemos</strong><span>memory · claims, events, replay-by-run-id</span>
+        <strong>Chronos</strong><span>signals · pattern detection over time-series</span>
+        <strong>Nous</strong><span>decisions · risk eval, plan generation, weights</span>
         <strong>Praxis</strong><span>execution · capability registry, audit, idempotency</span>
       </div>
     </div>
@@ -407,26 +446,25 @@ cd olymp
 </section>
 
 <section id="stack" aria-labelledby="stack-heading">
-  <p class="kicker">The cognitive stack</p>
-  <h2 id="stack-heading">Olymp's job is to drive the loop. The intelligence lives below.</h2>
+  <p class="kicker">The four services</p>
+  <h2 id="stack-heading">Each service ships standalone. Olymp wires all four into one loop.</h2>
   <p>
-    Each layer is a separately-deployable open-source service. Use them
-    standalone or wire all four through Olymp. The layer names are
-    deliberate; the four-system split lets each evolve on its own
-    cadence without dragging the others.
+    Use any one of them on its own — the refund-triage demo above
+    only touches Mnemos. Or wire all four through Olymp for the
+    full closed loop. Same images either way.
   </p>
   <div class="cols">
     <div class="card">
       <h3><a href="https://github.com/felixgeelhaar/mnemos">Mnemos · memory</a></h3>
-      <p>Local-first evidence layer. Extracts structured claims from text, detects contradictions, returns query answers with full evidence traceability.</p>
+      <p>Local-first evidence layer. Append-only events keyed by run id; structured claims with citations; replay any run from one HTTP call.</p>
     </div>
     <div class="card">
-      <h3><a href="https://github.com/felixgeelhaar/chronos">Chronos · time</a></h3>
-      <p>Pattern detection over time-series data. Ingests observations, derives spike / drift / seasonality signals.</p>
+      <h3><a href="https://github.com/felixgeelhaar/chronos">Chronos · signals</a></h3>
+      <p>Pattern detection over time-series data. Spike, trend, and drift detectors run continuously over bridged Prometheus observations.</p>
     </div>
     <div class="card">
       <h3><a href="https://github.com/felixgeelhaar/nous">Nous · decisions</a></h3>
-      <p>Commitment extraction, risk evaluation, intervention generation. Audit-grade decision trail. Bring your own LLM.</p>
+      <p>Risk evaluation and intervention generation. Decisions persisted with weights, evidence refs, and model name. Bring your own LLM.</p>
     </div>
     <div class="card">
       <h3><a href="https://github.com/felixgeelhaar/praxis">Praxis · execution</a></h3>
