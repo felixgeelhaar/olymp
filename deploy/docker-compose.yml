@@ -81,6 +81,13 @@ services:
       NOUS_MNEMOS_URL: http://mnemos:7777
       NOUS_CHRONOS_URL: http://chronos:7778
       NOUS_PRAXIS_ADDR: http://praxis:8080
+      # Wire Nous's commitment extractor to the local Ollama daemon
+      # via its OpenAI-compatible /v1 endpoint. Override
+      # NOUS_LLM_PROVIDER="" to fall back to the deterministic
+      # ScriptedExtractor when Ollama isn't running.
+      NOUS_LLM_PROVIDER: ${NOUS_LLM_PROVIDER:-ollama}
+      NOUS_LLM_BASE_URL: ${NOUS_LLM_BASE_URL:-http://ollama:11434/v1}
+      NOUS_LLM_MODEL: ${NOUS_LLM_MODEL:-llama3.2}
     restart: on-failure:5
     depends_on:
       postgres:
@@ -91,11 +98,27 @@ services:
         condition: service_started
       praxis:
         condition: service_started
+      ollama:
+        condition: service_started
     ports:
       - "7780:8080"   # Nous HTTP
       - "50051:50051" # Nous gRPC
     # Nous ships a distroless image (no shell, no wget). Skip the
     # in-container healthcheck and rely on `service_started` for ordering.
+
+  ollama:
+    # Local LLM daemon. Nous's commitment extractor talks to its
+    # OpenAI-compatible /v1 endpoint. The first /v1/extract call
+    # after boot pulls NOUS_LLM_MODEL on demand (default llama3.2,
+    # ~2 GB) so cold-start can take a minute. Override the model via
+    # NOUS_LLM_MODEL for a smaller pull.
+    image: ollama/ollama:0.5.4
+    environment:
+      OLLAMA_HOST: "0.0.0.0:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    ports:
+      - "11434:11434"
 
   praxis:
     image: ghcr.io/felixgeelhaar/praxis:${PRAXIS_TAG:-0.3.0}
@@ -233,3 +256,4 @@ volumes:
   pgdata:
   promdata:
   grafanadata:
+  ollamadata:

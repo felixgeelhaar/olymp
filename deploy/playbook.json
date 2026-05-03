@@ -8,6 +8,13 @@
           "method": "POST",
           "url": "http://flaky-payments:9101/admin/heal"
         }
+      },
+      {
+        "capability": "http_request",
+        "payload": {
+          "method": "POST",
+          "url": "http://slow-checkout:9102/admin/heal"
+        }
       }
     ]
   },

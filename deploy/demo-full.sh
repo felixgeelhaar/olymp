@@ -64,6 +64,12 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+echo "→ pull the local LLM model (Nous commitment extractor uses it)"
+NOUS_LLM_MODEL="$(grep ^NOUS_LLM_MODEL "${ENV_FILE}" | cut -d= -f2)"
+NOUS_LLM_MODEL="${NOUS_LLM_MODEL:-llama3.2}"
+${COMPOSE} exec -T ollama ollama pull "${NOUS_LLM_MODEL}" 2>&1 | tail -3 || \
+  echo "  warning: model pull failed; Nous will fall back to ScriptedExtractor on first call"
+
 echo "→ seed mnemos with operational claims"
 ${COMPOSE} exec -T olymp /app/olymp seed-demo
 
