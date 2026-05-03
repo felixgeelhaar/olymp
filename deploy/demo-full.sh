@@ -87,8 +87,8 @@ SCOPE_ID="$(grep ^DEMO_CHRONOS_SCOPE_ID "${ENV_FILE}" | cut -d= -f2)"
 
 echo
 echo "──────────────────────────────────────────────────────────────"
-echo "  Open http://localhost:3000  (anonymous viewer access enabled)"
-echo "  to watch the broken services degrade in real time."
+echo "  Open http://localhost:8080/dashboard  for the live cognitive-loop view."
+echo "  Open http://localhost:3000            for the Grafana service curves."
 echo "──────────────────────────────────────────────────────────────"
 echo
 

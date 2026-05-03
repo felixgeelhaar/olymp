@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/felixgeelhaar/olymp/internal/agentdesc"
+	"github.com/felixgeelhaar/olymp/internal/dashboard"
 	"github.com/felixgeelhaar/olymp/internal/domain"
 	"github.com/felixgeelhaar/olymp/internal/intent"
 	"github.com/felixgeelhaar/olymp/internal/observability"
@@ -39,6 +40,11 @@ func HTTPHandler(svc *Service, registry *intent.Registry, health *observability.
 	mux.HandleFunc("POST /v1/halt", handleHalt(svc))
 	mux.HandleFunc("GET /v1/agent-descriptor", handleAgentDescriptor(registry))
 	mux.HandleFunc("GET /healthz", handleHealth(health))
+	// Live dashboard. Connects to /v1/runs/stream (same origin, no
+	// CORS) and animates each run's path through the four cognitive
+	// layers. Embedded HTML/CSS/JS — no build step.
+	mux.Handle("GET /dashboard/", http.StripPrefix("/dashboard/", dashboard.Handler()))
+	mux.Handle("GET /dashboard", http.RedirectHandler("/dashboard/", http.StatusMovedPermanently))
 	return mux
 }
 

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>olymp · live</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">olymp<span>.</span> <em>live</em></div>
+  <div class="status" id="status">
+    <span class="dot" id="status-dot"></span><span id="status-text">connecting…</span>
+  </div>
+</header>
+
+<main>
+  <section class="topology">
+    <svg id="graph" viewBox="0 0 600 600" role="img" aria-label="Cognitive-stack topology with live request packets.">
+      <defs>
+        <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#7ad1ff" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#7ad1ff" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Connection lines (drawn first so nodes overlay them) -->
+      <g id="links" stroke="#2a323d" stroke-width="2" fill="none"></g>
+
+      <!-- Animated packets -->
+      <g id="packets"></g>
+
+      <!-- Nodes -->
+      <g id="nodes"></g>
+
+      <!-- Center: olymp -->
+      <circle cx="300" cy="300" r="80" fill="url(#centerGlow)"/>
+      <circle cx="300" cy="300" r="46" fill="#14181d" stroke="#7ad1ff" stroke-width="2"/>
+      <text x="300" y="297" text-anchor="middle" fill="#7ad1ff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" font-weight="600">olymp</text>
+      <text x="300" y="315" text-anchor="middle" fill="#8a93a0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">runtime</text>
+    </svg>
+  </section>
+
+  <section class="counters">
+    <div class="counter"><div class="num" id="cnt-inflight">0</div><div class="lbl">in flight</div></div>
+    <div class="counter"><div class="num" id="cnt-completed">0</div><div class="lbl">completed</div></div>
+    <div class="counter"><div class="num" id="cnt-failed">0</div><div class="lbl">failed</div></div>
+    <div class="counter"><div class="num" id="cnt-events">0</div><div class="lbl">events seen</div></div>
+  </section>
+
+  <section class="feed">
+    <h3>recent runs</h3>
+    <ol id="runs"></ol>
+    <h3>event log <span class="dim" id="feed-rate"></span></h3>
+    <ol class="log" id="log"></ol>
+  </section>
+</main>
+
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>
