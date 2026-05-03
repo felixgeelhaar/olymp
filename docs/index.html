@@ -61,14 +61,15 @@
   </p>
 
   <div class="callout">
-    <strong>The loop closes.</strong>
+    <strong>The loop closes — for real.</strong>
     On a fresh stack the payments error rate climbs from 2% to 35%
-    over the first 80s. Olymp's <code>remediate</code> intent runs
-    the full loop, Praxis fires the registered <code>http_request</code>
-    capability against the service's heal endpoint, and the error
-    rate drops back below 15% in the next minute — visible live in
-    Grafana, recorded as a Mnemos event, replayable from the audit
-    chain.
+    over the first 80s. Chronos detects the spike + the checkout
+    latency drift. Nous (driven by a local Llama via the bundled
+    Ollama daemon) extracts a remediation commitment. Praxis fires
+    two <code>http_request</code> actions back-to-back — heals
+    flaky-payments AND slow-checkout. Error rate drops below 5% in
+    ~70s. Visible live in Grafana, recorded as a Mnemos event,
+    replayable from the audit chain.
   </div>
 
   <div class="cols">
@@ -82,7 +83,7 @@
     </div>
     <div class="card">
       <h3>Olymp loop</h3>
-      <p>Each <code>explain</code> or <code>remediate</code> intent runs the full cognitive loop. Provenance touches every layer; memory records the outcome for the next iteration.</p>
+      <p>Each <code>remediate</code> intent runs the full loop and fires multiple Praxis actions in one decision — heal flaky-payments AND slow-checkout, then write the outcome back to memory.</p>
     </div>
   </div>
 
@@ -93,17 +94,17 @@
       <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
       <span class="label">$ ./deploy/demo-full.sh</span>
     </div>
-<pre><code>→ build the local olymp image
-→ bring up cognitive stack + demo services
+<pre><code>→ pull pinned cognitive-stack images and bring up demo services
 → wait for olymp /healthz                      ok
 → wait for prometheus to scrape both services  both targets up
+→ pull the local LLM model (llama3.2)          ok (~2 GB on first run)
 → seed mnemos with operational claims          seeded 3 claims into mnemos
 
   Open http://localhost:3000 to watch the broken services degrade.
 
 → submit explain payments-latency
 {
-  "id":     "5bbd4777-1cd3-4ace-9711-ddb86bde278d",
+  "id":     "5bbd4777-…",
   "status": "completed",
   "intent": "explain"
 }
@@ -117,11 +118,16 @@
   "subject": "payments-latency",
   "status":  "completed",
   "timeline": [
-    { "stage": "observing",     "layer": "mnemos"  },
-    { "stage": "understanding", "layer": "chronos" },
-    { "stage": "deciding",      "layer": "nous",    "ref": "05966dd5-…" },
+    { "stage": "observing",     "layer": "mnemos",  "outputs": { "count": 3 } },
+    { "stage": "understanding", "layer": "chronos",
+      "outputs": { "count": 2, "patterns": ["spike", "trend"] } },
+    { "stage": "deciding",      "layer": "nous",    "ref": "05966dd5-…",
+      "outputs": { "model": "llama3.2", "actions_planned": 2 } },
     { "stage": "acting",        "layer": "praxis", "ref": "b2d98814-…",
-      "outputs": { "actions": [{ "capability": "http_request", "status": "succeeded" }] } },
+      "outputs": { "actions": [
+        { "capability": "http_request", "url": "…/flaky-payments/admin/heal", "status": "succeeded" },
+        { "capability": "http_request", "url": "…/slow-checkout/admin/heal",  "status": "succeeded" }
+      ] } },
     { "stage": "learning",      "layer": "mnemos"  }
   ]
 }
@@ -141,13 +147,13 @@
     <div class="what">Olymp asks the memory layer for active claims about the subject. Returns SLO claims, hypotheses, and ownership relationships.</div>
 
     <div class="stage">understanding</div>
-    <div class="what">Olymp asks the time-series layer for signals on the demo scope. The bridge has been posting <em>error_rate</em> and <em>p99 latency</em> observations every 10s.</div>
+    <div class="what">Olymp asks the time-series layer for signals. Chronos detectors have been running on the bridged observations every 5s; the demo's tuned thresholds surface a <em>spike</em> on payments error rate and a <em>trend</em> on checkout latency.</div>
 
     <div class="stage">deciding</div>
-    <div class="what">Olymp submits the merged context (memories + signals) to the decision layer. The layer records its reasoning with a stable <code>decision_id</code>.</div>
+    <div class="what">Olymp submits memories + signals to the decision layer. Nous's commitment extractor (driven by a local Llama via the bundled Ollama daemon) produces a remediation plan; the playbook resolves it to two concrete actions. The decision is recorded with inputs + weights + outcome.</div>
 
     <div class="stage">acting</div>
-    <div class="what">Olymp dispatches an <code>ActionRequest</code> to the execution layer. Praxis routes it to its registered <code>http_request</code> handler, which POSTs to the service's heal endpoint. In production the same path fires rollback / restart / page handlers.</div>
+    <div class="what">Olymp dispatches both <code>ActionRequest</code>s to the execution layer. Praxis runs them sequentially through the same executor — schema-validated, policy-checked, idempotent, audit-logged. In production the same path fires rollback / restart / page handlers.</div>
 
     <div class="stage">learning</div>
     <div class="what">Olymp writes the outcome back to memory as a structured event. The next iteration's <em>observing</em> stage sees it. The loop is closed.</div>
