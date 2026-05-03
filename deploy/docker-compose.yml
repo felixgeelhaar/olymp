@@ -154,7 +154,7 @@ services:
       retries: 10
 
   olymp:
-    image: ghcr.io/felixgeelhaar/olymp:${OLYMP_TAG:-0.1.3}
+    image: ghcr.io/felixgeelhaar/olymp:${OLYMP_TAG:-0.1.4}
     environment:
       OLYMP_DB_TYPE: postgres
       OLYMP_DB_CONN: postgres://olymp:olymp@postgres:5432/olymp?sslmode=disable
