@@ -429,6 +429,19 @@ pre code { background: transparent; padding: 0; }
   .pipe-band .row > strong { padding-top: 8px; }
 }
 
+/* Asciinema player wrapper — sized to match the terminal block below. */
+.cast-player {
+  margin: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1d1f21; /* monokai bg approximation; player overrides */
+}
+.cast-player .ap-wrapper {
+  /* asciinema-player ships its own styles; this is just defensive */
+  background: #1d1f21;
+}
+
 /* Hero loop preview — animated SVG mimicking the live dashboard. */
 .hero-loop {
   margin: 36px 0 0;

@@ -8,6 +8,7 @@
   <meta property="og:title" content="Olymp — durable, auditable orchestrator for agentic loops">
   <meta property="og:description" content="Closed-loop incident response with full provenance across memory, time-series, decisions, and execution. Open source, MIT.">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.css">
 </head>
 <body>
 
@@ -224,7 +225,9 @@
   </div>
 
   <h3 class="subhead">One run, end to end</h3>
-  <p class="dim">From a fresh stack — runs complete in seconds.</p>
+  <p class="dim">From a fresh stack — runs complete in seconds. Press play to scrub through the recorded session.</p>
+  <div id="cast-player" class="cast-player" aria-label="Asciinema recording of demo-full.sh"></div>
+  <p class="dim" style="margin: 8px 0 16px; font-size: 12px;">Static fallback below if the asciinema player can't load.</p>
   <div class="terminal" role="figure" aria-label="Terminal output of demo-full.sh">
     <div class="bar" aria-hidden="true">
       <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
@@ -495,5 +498,25 @@ cd olymp
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.10.0/dist/bundle/asciinema-player.min.js"></script>
+<script>
+  (function () {
+    const target = document.getElementById('cast-player');
+    if (!target || typeof AsciinemaPlayer === 'undefined') return;
+    try {
+      AsciinemaPlayer.create('assets/demo.cast', target, {
+        autoPlay: true,
+        loop: true,
+        terminalFontSize: '14px',
+        theme: 'monokai',
+        idleTimeLimit: 1.5,
+        fit: 'width',
+      });
+    } catch (e) {
+      // Silently fall through to the static <pre> terminal block below.
+      target.style.display = 'none';
+    }
+  })();
+</script>
 </body>
 </html>

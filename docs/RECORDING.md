@@ -1,11 +1,35 @@
-# Recording the dashboard loop for the landing page
+# Recording the demo for the landing page
 
-The hero section on https://felixgeelhaar.github.io/olymp/ tries to
-play `docs/assets/dashboard-loop.mp4` and falls back to the inline
-animated SVG when the file is missing. Drop a real screen capture in
-that path and the page picks it up on next deploy.
+The page has two recording slots, both with graceful fallbacks:
 
-Target spec: ~5–10 seconds, silent, ≤2 MB, H.264 + AAC, 720p.
+| Slot | File | Fallback | Best for |
+|---|---|---|---|
+| **Terminal** | `docs/assets/demo.cast` | static `<pre>` block | demo-full.sh output, curl runs |
+| **Dashboard UI** | `docs/assets/dashboard-loop.mp4` | inline animated SVG | the radial topology + packets + drawer |
+
+Both are auto-loaded by the page; missing files fall through silently.
+
+## Terminal recording (asciinema)
+
+Lightweight, scrubbable, weighs a few KB, plays in any browser via
+the asciinema-player web component already wired into the page.
+
+```bash
+brew install asciinema   # or: pipx install asciinema
+asciinema rec docs/assets/demo.cast
+./deploy/demo-full.sh
+exit                     # ends the recording
+```
+
+A hand-authored cast ships at `docs/assets/demo.cast` already — replace
+it with a real one whenever the demo flow changes.
+
+Trim with `asciinema-tools` or just edit the JSON cast directly to
+remove dead time / banner output.
+
+## Dashboard UI recording (MP4)
+
+Target: ~5–10 seconds, silent, ≤2 MB, H.264 + AAC, 720p.
 
 ## 1. Boot the demo
 
