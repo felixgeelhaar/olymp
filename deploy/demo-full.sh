@@ -29,27 +29,7 @@ if [ ! -f "${ENV_FILE}" ]; then
   echo "→ wrote ${ENV_FILE} from template"
 fi
 
-echo "→ build local olymp image (seed-demo + adapter fixes)"
-docker build -q -t ghcr.io/felixgeelhaar/olymp:demo "${ROOT}" >/dev/null
-export OLYMP_TAG=demo
-
-# Praxis 0.1.0 didn't persist its capability registry to Postgres, so
-# the FK from `actions.capability` rejected every Execute on a cold-
-# start postgres deployment. The fix lives on `praxis@main` (Registry
-# now upserts via the configured CapabilityRepo); use a locally-built
-# image until that lands in a tagged release.
-PRAXIS_REPO="${PRAXIS_REPO:-${ROOT}/../praxis}"
-if [ -d "${PRAXIS_REPO}" ]; then
-  echo "→ build local praxis image with capability persistence fix"
-  # Praxis's default Dockerfile expects a goreleaser-prebuilt binary
-  # in the build context. Dockerfile.dev compiles from source.
-  docker build -q -f "${PRAXIS_REPO}/Dockerfile.dev" -t ghcr.io/felixgeelhaar/praxis:demo "${PRAXIS_REPO}" >/dev/null
-  export PRAXIS_TAG=demo
-else
-  echo "warning: praxis sibling repo not found at ${PRAXIS_REPO}; using tagged image (Praxis Execute may 500 until v0.2 ships)"
-fi
-
-echo "→ bring up cognitive stack + demo services (this may take a minute)"
+echo "→ pull pinned cognitive-stack images and bring up demo services"
 ${COMPOSE} --profile demo up -d --build
 
 # Wait for Olymp's healthz to report all four layers green.
